@@ -1,0 +1,187 @@
+const express = require("express");
+const router = express.Router();
+const { login, register, verify,resendOtp, forgotPassword,resetPassword,logout} = require("../controller/auth.controller");
+
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Ro'yxatdan o'tish
+ *     tags:
+ *       - Autentifikatsiya
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: jumanazarovogabek773@gmail.com
+ *               password:
+ *                 type: string
+ *                 example: "111111"
+ *     responses:
+ *       200:
+ *         description: Tasdiqlash kodi yuborildi
+ */
+router.post("/register", register);
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Tizimga kirish
+ *     tags:
+ *       - Autentifikatsiya
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: jumanazarovogabek773@gmail.com
+ *               password:
+ *                 type: string
+ *                 example: "111111"
+ *     responses:
+ *       200:
+ *         description: Kirish muvaffaqiyatli
+ */
+router.post("/login", login);
+
+/**
+ * @swagger
+ * /api/auth/verify:
+ *   post:
+ *     summary: Tasdiqlash kodi orqali foydalanuvchini tasdiqlash
+ *     tags:
+ *       - Autentifikatsiya
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - code
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: jumanazarovogabek773@gmail.com
+ *               code:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       201:
+ *         description: Foydalanuvchi muvaffaqiyatli yaratildi
+ *       400:
+ *         description: Kod noto'g'ri yoki muddati tugagan
+ */
+router.post("/verify", verify);
+/**
+ * @swagger
+ * /api/auth/resend-otp:
+ *   post:
+ *     summary: Tasdiqlash kodini qayta yuborish
+ *     tags:
+ *       - Autentifikatsiya
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: jumanazarovogabek773@gmail.com
+ *     responses:
+ *       200:
+ *         description: Yangi tasdiqlash kodi yuborildi
+ */
+router.post("/resend-otp", resendOtp);
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Parolni tiklash uchun kod yuborish
+ *     tags:
+ *       - Autentifikatsiya
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: jumanazarovogabek773@gmail.com
+ *     responses:
+ *       200:
+ *         description: Parolni tiklash kodi yuborildi
+ */
+router.post("/forgot-password", forgotPassword);
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Parolni yangilash
+ *     tags:
+ *       - Autentifikatsiya
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - code
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: jumanazarovogabek773@gmail.com
+ *               code:
+ *                 type: string
+ *                 example: "123456"
+ *               password:
+ *                 type: string
+ *                 example: "11111111"
+ *     responses:
+ *       200:
+ *         description: Parol muvaffaqiyatli yangilandi
+ */
+router.post("/reset-password", resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Tizimdan chiqish
+ *     tags:
+ *       - Autentifikatsiya
+ *     responses:
+ *       200:
+ *         description: Tizimdan muvaffaqiyatli chiqildi
+ */
+router.post("/logout", logout);
+
+module.exports = router;
