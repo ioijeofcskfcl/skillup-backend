@@ -1,6 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const { login, register, verify,resendOtp, forgotPassword,resetPassword,logout} = require("../controller/auth.controller");
+const {
+    login,
+    register,
+    verify,
+    resendOtp,
+    forgotPassword,
+    resetPassword,
+    logout,
+} = require("../controller/auth.controller");
 
 /**
  * @swagger
