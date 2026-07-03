@@ -1,7 +1,13 @@
 const express = require("express");
 const router = express.Router();
 
-const { createCourse,getAllCourses,getCourseById,updateCourse,deleteCourse } = require("../controller/course.controller");
+const {
+    createCourse,
+    getAllCourses,
+    getCourseById,
+    updateCourse,
+    deleteCourse,
+} = require("../controller/course.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 const roleMiddleware = require("../middleware/role.middleware");
 
@@ -40,12 +46,7 @@ const roleMiddleware = require("../middleware/role.middleware");
  *       201:
  *         description: Kurs muvaffaqiyatli yaratildi
  */
-router.post(
-    "/",
-    authMiddleware,
-    roleMiddleware("ADMIN"),
-    createCourse
-);
+router.post("/", authMiddleware, roleMiddleware("ADMIN"), createCourse);
 /**
  * @swagger
  * /api/courses:
@@ -59,11 +60,7 @@ router.post(
  *       200:
  *         description: Kurslar ro'yxati
  */
-router.get(
-    "/",
-    authMiddleware,
-    getAllCourses
-);
+router.get("/", authMiddleware, getAllCourses);
 /**
  * @swagger
  * /api/courses/{id}:
@@ -85,11 +82,7 @@ router.get(
  *       404:
  *         description: Kurs topilmadi
  */
-router.get(
-    "/:id",
-    authMiddleware,
-    getCourseById
-);
+router.get("/:id", authMiddleware, getCourseById);
 /**
  * @swagger
  * /api/courses/{id}:
@@ -124,12 +117,7 @@ router.get(
  *       200:
  *         description: Kurs muvaffaqiyatli yangilandi
  */
-router.put(
-    "/:id",
-    authMiddleware,
-    roleMiddleware("ADMIN"),
-    updateCourse
-);
+router.put("/:id", authMiddleware, roleMiddleware("ADMIN"), updateCourse);
 
 /**
  * @swagger
@@ -152,11 +140,6 @@ router.put(
  *       404:
  *         description: Kurs topilmadi
  */
-router.delete(
-    "/:id",
-    authMiddleware,
-    roleMiddleware("ADMIN"),
-    deleteCourse
-);
+router.delete("/:id", authMiddleware, roleMiddleware("ADMIN"), deleteCourse);
 
 module.exports = router;
