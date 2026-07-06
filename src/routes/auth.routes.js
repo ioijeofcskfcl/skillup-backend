@@ -9,7 +9,14 @@ const {
     resetPassword,
     logout,
 } = require("../controller/auth.controller");
+const validationMiddleware = require("../middleware/validation.middleware");
 
+const {
+    registerSchema,
+    loginSchema,
+    forgotPasswordSchema,
+    resetPasswordSchema,
+} = require("../validations/auth.validation");
 /**
  * @swagger
  * /api/auth/register:
@@ -37,7 +44,7 @@ const {
  *       200:
  *         description: Tasdiqlash kodi yuborildi
  */
-router.post("/register", register);
+router.post("/register", register, validationMiddleware(registerSchema));
 
 /**
  * @swagger
@@ -66,7 +73,7 @@ router.post("/register", register);
  *       200:
  *         description: Kirish muvaffaqiyatli
  */
-router.post("/login", login);
+router.post("/login", login, validationMiddleware(loginSchema),);
 
 /**
  * @swagger
@@ -97,7 +104,7 @@ router.post("/login", login);
  *       400:
  *         description: Kod noto'g'ri yoki muddati tugagan
  */
-router.post("/verify", verify);
+router.post("/verify", verify, );
 /**
  * @swagger
  * /api/auth/resend-otp:
@@ -121,7 +128,7 @@ router.post("/verify", verify);
  *       200:
  *         description: Yangi tasdiqlash kodi yuborildi
  */
-router.post("/resend-otp", resendOtp);
+router.post("/resend-otp", resendOtp, );
 /**
  * @swagger
  * /api/auth/forgot-password:
@@ -145,7 +152,7 @@ router.post("/resend-otp", resendOtp);
  *       200:
  *         description: Parolni tiklash kodi yuborildi
  */
-router.post("/forgot-password", forgotPassword);
+router.post("/forgot-password", forgotPassword, validationMiddleware(forgotPasswordSchema));
 /**
  * @swagger
  * /api/auth/reset-password:
@@ -177,7 +184,7 @@ router.post("/forgot-password", forgotPassword);
  *       200:
  *         description: Parol muvaffaqiyatli yangilandi
  */
-router.post("/reset-password", resetPassword);
+router.post("/reset-password", resetPassword, validationMiddleware(resetPasswordSchema));
 
 /**
  * @swagger

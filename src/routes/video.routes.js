@@ -9,6 +9,12 @@ const {
     deleteVideo,
     getVideosByCourse,
 } = require("../controller/video.controller");
+const validationMiddleware = require("../middleware/validation.middleware");
+
+const {
+    createVideoSchema,
+    updateVideoSchema,
+} = require("../validations/video.validation");
 
 const authMiddleware = require("../middleware/auth.middleware");
 const roleMiddleware = require("../middleware/role.middleware");
@@ -56,9 +62,9 @@ router.post(
     "/",
     authMiddleware,
     roleMiddleware("ADMIN"),
-    createVideo
+    createVideo,
+    validationMiddleware(createVideoSchema)
 );
-
 /**
  * @swagger
  * /api/videos:
@@ -68,16 +74,32 @@ router.post(
  *       - Video
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Sahifa raqami
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Har bir sahifadagi videolar soni
  *     responses:
  *       200:
- *         description: Video ro'yxati
+ *         description: Videolar ro'yxati muvaffaqiyatli olindi
+ *       401:
+ *         description: Token mavjud emas yoki noto'g'ri
  */
 router.get(
     "/",
     authMiddleware,
     getAllVideos
 );
-
 /**
  * @swagger
  * /api/videos/course/{courseId}:
@@ -129,7 +151,8 @@ router.get(
 router.get(
     "/:id",
     authMiddleware,
-    getVideoById
+    getVideoById,
+    validationMiddleware(updateVideoSchema)
 );
 
 /**

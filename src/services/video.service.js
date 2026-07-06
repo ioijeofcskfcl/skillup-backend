@@ -42,8 +42,17 @@ const createVideo = async ({
 
     return result.rows[0];
 };
-const getAllVideos = async () => {
-    const result = await pool.query(`
+const getAllVideos = async (page = 1, limit = 10) => {
+    const offset = (page - 1) * limit;
+
+    const totalResult = await pool.query(`
+        SELECT COUNT(*) FROM videos
+    `);
+
+    const total = Number(totalResult.rows[0].count);
+
+    const result = await pool.query(
+        `
         SELECT
             v.*,
             c.title AS course_title
@@ -51,9 +60,18 @@ const getAllVideos = async () => {
         LEFT JOIN courses c
             ON v.course_id = c.id
         ORDER BY v.order_number ASC
-    `);
+        LIMIT $1 OFFSET $2
+        `,
+        [limit, offset]
+    );
 
-    return result.rows;
+    return {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        data: result.rows,
+    };
 };
 const getVideoById = async (id) => {
     const result = await pool.query(

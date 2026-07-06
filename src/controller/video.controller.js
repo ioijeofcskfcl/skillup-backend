@@ -18,12 +18,17 @@ const createVideo = async (req, res) => {
 };
 const getAllVideos = async (req, res) => {
     try {
-        const videos = await videoService.getAllVideos();
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+
+        const videos = await videoService.getAllVideos(
+            page,
+            limit
+        );
 
         return res.status(200).json({
             success: true,
-            count: videos.length,
-            data: videos,
+            ...videos,
         });
     } catch (error) {
         return res.status(500).json({

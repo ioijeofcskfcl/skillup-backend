@@ -1,26 +1,40 @@
 const pool = require("../db/index");
 
 const createCourse = async ({
+    category_id,
     title,
     description,
     price,
     image_url,
     created_by,
 }) => {
+
+    // Category mavjudligini tekshirish
+    const category = await pool.query(
+        "SELECT * FROM categories WHERE id = $1",
+        [category_id]
+    );
+
+    if (category.rows.length === 0) {
+        throw new Error("Kategoriya topilmadi.");
+    }
+
     const result = await pool.query(
         `
         INSERT INTO courses
         (
+            category_id,
             title,
             description,
             price,
             image_url,
             created_by
         )
-        VALUES ($1,$2,$3,$4,$5)
+        VALUES ($1,$2,$3,$4,$5,$6)
         RETURNING *
         `,
         [
+            category_id,
             title,
             description,
             price,
@@ -31,21 +45,15 @@ const createCourse = async ({
 
     return result.rows[0];
 };
-const getAllCourses = async () => {
-    const result = await pool.query(`
-        SELECT 
-            c.*,
-            u.fullname AS admin_name,
-            u.email AS admin_email
-        FROM courses c
-        LEFT JOIN users u
-            ON c.created_by = u.id
-        ORDER BY c.created_at DESC
+const getAllCourses = async (page = 1, limit = 10) => {
+    const offset = (page - 1) * limit;
+
+    const totalResult = await pool.query(`
+        SELECT COUNT(*) FROM courses
     `);
 
-    return result.rows;
-};
-const getCourseById = async (id) => {
+    const total = Number(totalResult.rows[0].count);
+
     const result = await pool.query(
         `
         SELECT
@@ -53,6 +61,33 @@ const getCourseById = async (id) => {
             u.fullname AS admin_name,
             u.email AS admin_email
         FROM courses c
+        LEFT JOIN users u
+            ON c.created_by = u.id
+        ORDER BY c.created_at DESC
+        LIMIT $1 OFFSET $2
+        `,
+        [limit, offset]
+    );
+
+    return {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        data: result.rows,
+    };
+};
+const getCourseById = async (id) => {
+    const result = await pool.query(
+        `
+        SELECT
+            c.*,
+            cat.name AS category_name,
+            u.fullname AS admin_name,
+            u.email AS admin_email
+        FROM courses c
+        LEFT JOIN categories cat
+            ON c.category_id = cat.id
         LEFT JOIN users u
             ON c.created_by = u.id
         WHERE c.id = $1
@@ -78,6 +113,19 @@ const updateCourse = async (id, data) => {
 
     const course = oldCourse.rows[0];
 
+    // category_id yuborilgan bo'lsa, mavjudligini tekshiramiz
+    if (data.category_id) {
+        const category = await pool.query(
+            "SELECT * FROM categories WHERE id = $1",
+            [data.category_id]
+        );
+
+        if (category.rows.length === 0) {
+            throw new Error("Kategoriya topilmadi.");
+        }
+    }
+
+    const category_id = data.category_id ?? course.category_id;
     const title = data.title ?? course.title;
     const description = data.description ?? course.description;
     const price = data.price ?? course.price;
@@ -87,15 +135,17 @@ const updateCourse = async (id, data) => {
         `
         UPDATE courses
         SET
-            title = $1,
-            description = $2,
-            price = $3,
-            image_url = $4,
+            category_id = $1,
+            title = $2,
+            description = $3,
+            price = $4,
+            image_url = $5,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = $5
+        WHERE id = $6
         RETURNING *
         `,
         [
+            category_id,
             title,
             description,
             price,
@@ -105,7 +155,7 @@ const updateCourse = async (id, data) => {
     );
 
     return result.rows[0];
-};
+}; 
 const deleteCourse = async (id) => {
     const course = await pool.query(
         "SELECT id FROM courses WHERE id = $1",

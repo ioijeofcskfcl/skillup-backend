@@ -33,15 +33,15 @@ const login = async (req, res) => {
                 .json({ message: "Email yoki parol noto'g'ri!" });
 
         const token = jwt.sign(
-    {
-        id: user.id,
-        role: user.role,
-    },
-    process.env.JWT_SECRET || "secret",
-    {
-        expiresIn: "24h",
-    }
-);
+            {
+                id: user.id,
+                role: user.role,
+            },
+            process.env.JWT_SECRET || "secret",
+            {
+                expiresIn: "24h",
+            },
+        );
         res.status(200).json({
             message: "Muvaffaqiyatli tizimga kirildi.",
             token,
@@ -126,16 +126,16 @@ const verify = async (req, res) => {
 
         await redisClient.del(`register:${email}`);
 
-       const token = jwt.sign(
-    {
-        id: user.rows[0].id,
-        role: user.rows[0].role,
-    },
-    process.env.JWT_SECRET || "secret",
-    {
-        expiresIn: "24h",
-    }
-);
+        const token = jwt.sign(
+            {
+                userId: user.rows[0].id,
+                role: user.rows[0].role,
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "24h",
+            },
+        );
 
         res.status(201).json({
             message: "Ro'yxatdan o'tish muvaffaqiyatli.",

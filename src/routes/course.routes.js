@@ -8,6 +8,13 @@ const {
     updateCourse,
     deleteCourse,
 } = require("../controller/course.controller");
+const validationMiddleware = require("../middleware/validation.middleware");
+
+const {
+    createCourseSchema,
+    updateCourseSchema,
+} = require("../validations/course.validation");
+
 const authMiddleware = require("../middleware/auth.middleware");
 const roleMiddleware = require("../middleware/role.middleware");
 
@@ -27,26 +34,44 @@ const roleMiddleware = require("../middleware/role.middleware");
  *           schema:
  *             type: object
  *             required:
+ *               - category_id
  *               - title
+ *               - description
  *               - price
  *             properties:
+ *               category_id:
+ *                 type: string
+ *                 example: 7c0b5fd0-5d85-4d8e-b7c7-123456789abc
  *               title:
  *                 type: string
  *                 example: Node.js Backend
  *               description:
  *                 type: string
- *                 example: 0 dan professional darajagacha
+ *                 example: Professional Node.js Backend kursi
  *               price:
  *                 type: number
  *                 example: 500000
  *               image_url:
  *                 type: string
- *                 example: https://example.com/nodejs.png
+ *                 example: https://example.com/course.jpg
  *     responses:
  *       201:
  *         description: Kurs muvaffaqiyatli yaratildi
+ *       400:
+ *         description: Noto'g'ri ma'lumot yuborildi
+ *       401:
+ *         description: Token mavjud emas yoki noto'g'ri
+ *       403:
+ *         description: Ruxsat yo'q
  */
-router.post("/", authMiddleware, roleMiddleware("ADMIN"), createCourse);
+router.post(
+    "/",
+    authMiddleware,
+    roleMiddleware("ADMIN"),
+    createCourse,
+    validationMiddleware(createCourseSchema)
+);
+
 /**
  * @swagger
  * /api/courses:
@@ -56,9 +81,26 @@ router.post("/", authMiddleware, roleMiddleware("ADMIN"), createCourse);
  *       - Course
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Sahifa raqami
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Har bir sahifadagi kurslar soni
  *     responses:
  *       200:
- *         description: Kurslar ro'yxati
+ *         description: Kurslar ro'yxati muvaffaqiyatli olindi
+ *       401:
+ *         description: Token mavjud emas yoki noto'g'ri
  */
 router.get("/", authMiddleware, getAllCourses);
 /**
@@ -83,6 +125,7 @@ router.get("/", authMiddleware, getAllCourses);
  *         description: Kurs topilmadi
  */
 router.get("/:id", authMiddleware, getCourseById);
+
 /**
  * @swagger
  * /api/courses/{id}:
@@ -105,19 +148,40 @@ router.get("/:id", authMiddleware, getCourseById);
  *           schema:
  *             type: object
  *             properties:
+ *               category_id:
+ *                 type: string
+ *                 example: 7c0b5fd0-5d85-4d8e-b7c7-123456789abc
  *               title:
  *                 type: string
+ *                 example: Node.js Backend
  *               description:
  *                 type: string
+ *                 example: Professional Node.js Backend kursi
  *               price:
  *                 type: number
+ *                 example: 500000
  *               image_url:
  *                 type: string
+ *                 example: https://example.com/course.jpg
  *     responses:
  *       200:
  *         description: Kurs muvaffaqiyatli yangilandi
+ *       400:
+ *         description: Noto'g'ri ma'lumot yuborildi
+ *       401:
+ *         description: Token mavjud emas yoki noto'g'ri
+ *       403:
+ *         description: Ruxsat yo'q
+ *       404:
+ *         description: Kurs topilmadi
  */
-router.put("/:id", authMiddleware, roleMiddleware("ADMIN"), updateCourse);
+router.put(
+    "/:id",
+    authMiddleware,
+    roleMiddleware("ADMIN"),
+    updateCourse,
+    validationMiddleware(updateCourseSchema)
+);
 
 /**
  * @swagger
@@ -137,9 +201,18 @@ router.put("/:id", authMiddleware, roleMiddleware("ADMIN"), updateCourse);
  *     responses:
  *       200:
  *         description: Kurs muvaffaqiyatli o'chirildi
+ *       401:
+ *         description: Token mavjud emas yoki noto'g'ri
+ *       403:
+ *         description: Ruxsat yo'q
  *       404:
  *         description: Kurs topilmadi
  */
-router.delete("/:id", authMiddleware, roleMiddleware("ADMIN"), deleteCourse);
+router.delete(
+    "/:id",
+    authMiddleware,
+    roleMiddleware("ADMIN"),
+    deleteCourse
+);
 
 module.exports = router;

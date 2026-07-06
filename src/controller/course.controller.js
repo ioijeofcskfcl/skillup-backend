@@ -4,7 +4,7 @@ const createCourse = async (req, res) => {
     try {
         const course = await courseService.createCourse({
             ...req.body,
-            created_by: req.user.userId,
+            created_by: req.user.id,
         });
 
         return res.status(201).json({
@@ -21,12 +21,17 @@ const createCourse = async (req, res) => {
 };
 const getAllCourses = async (req, res) => {
     try {
-        const courses = await courseService.getAllCourses();
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+
+        const courses = await courseService.getAllCourses(
+            page,
+            limit
+        );
 
         return res.status(200).json({
             success: true,
-            count: courses.length,
-            data: courses,
+            ...courses,
         });
     } catch (error) {
         return res.status(500).json({
