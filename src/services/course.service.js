@@ -8,8 +8,6 @@ const createCourse = async ({
     image_url,
     created_by,
 }) => {
-
-    // Category mavjudligini tekshirish
     const category = await pool.query(
         "SELECT * FROM categories WHERE id = $1",
         [category_id]
@@ -45,15 +43,49 @@ const createCourse = async ({
 
     return result.rows[0];
 };
-const getAllCourses = async (page = 1, limit = 10) => {
+
+const getAllCourses = async (
+    page = 1,
+    limit = 10,
+    category_id = "",
+    search = ""
+) => {
     const offset = (page - 1) * limit;
 
-    const totalResult = await pool.query(`
-        SELECT COUNT(*) FROM courses
-    `);
+    let where = [];
+    let values = [];
+
+    // CATEGORY FILTER
+    if (category_id) {
+        values.push(category_id);
+        where.push(`c.category_id = $${values.length}`);
+    }
+
+    // SEARCH FILTER
+    if (search) {
+        values.push(`%${search}%`);
+        where.push(
+            `(c.title ILIKE $${values.length} OR c.description ILIKE $${values.length})`
+        );
+    }
+
+    const whereQuery = where.length
+        ? "WHERE " + where.join(" AND ")
+        : "";
+
+    // COUNT QUERY
+    const totalResult = await pool.query(
+        `
+        SELECT COUNT(*)
+        FROM courses c
+        ${whereQuery}
+        `,
+        values
+    );
 
     const total = Number(totalResult.rows[0].count);
 
+    // MAIN QUERY
     const result = await pool.query(
         `
         SELECT
@@ -63,10 +95,12 @@ const getAllCourses = async (page = 1, limit = 10) => {
         FROM courses c
         LEFT JOIN users u
             ON c.created_by = u.id
+        ${whereQuery}
         ORDER BY c.created_at DESC
-        LIMIT $1 OFFSET $2
+        LIMIT $${values.length + 1}
+        OFFSET $${values.length + 2}
         `,
-        [limit, offset]
+        [...values, limit, offset]
     );
 
     return {
@@ -77,6 +111,7 @@ const getAllCourses = async (page = 1, limit = 10) => {
         data: result.rows,
     };
 };
+
 const getCourseById = async (id) => {
     const result = await pool.query(
         `
@@ -101,6 +136,7 @@ const getCourseById = async (id) => {
 
     return result.rows[0];
 };
+
 const updateCourse = async (id, data) => {
     const oldCourse = await pool.query(
         "SELECT * FROM courses WHERE id = $1",
@@ -113,7 +149,6 @@ const updateCourse = async (id, data) => {
 
     const course = oldCourse.rows[0];
 
-    // category_id yuborilgan bo'lsa, mavjudligini tekshiramiz
     if (data.category_id) {
         const category = await pool.query(
             "SELECT * FROM categories WHERE id = $1",
@@ -155,7 +190,8 @@ const updateCourse = async (id, data) => {
     );
 
     return result.rows[0];
-}; 
+};
+
 const deleteCourse = async (id) => {
     const course = await pool.query(
         "SELECT id FROM courses WHERE id = $1",
@@ -170,9 +206,8 @@ const deleteCourse = async (id) => {
         "DELETE FROM courses WHERE id = $1",
         [id]
     );
-
-    return;
 };
+
 module.exports = {
     createCourse,
     getAllCourses,

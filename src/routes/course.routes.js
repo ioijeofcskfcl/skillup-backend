@@ -71,7 +71,6 @@ router.post(
     createCourse,
     validationMiddleware(createCourseSchema)
 );
-
 /**
  * @swagger
  * /api/courses:
@@ -96,6 +95,13 @@ router.post(
  *           type: integer
  *           default: 10
  *         description: Har bir sahifadagi kurslar soni
+ *       - in: query
+ *         name: category_id
+ *         required: false
+ *         schema:
+ *           type: string
+ *           example: d1a4a970-0894-4bfa-b95c-571faa8e169e
+ *         description: Kategoriya ID bo'yicha filtrlash
  *     responses:
  *       200:
  *         description: Kurslar ro'yxati muvaffaqiyatli olindi
