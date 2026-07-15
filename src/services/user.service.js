@@ -1,14 +1,52 @@
 const pool = require("../db/index");
 
-const getAllUsers = async (page = 1, limit = 10) => {
+const getAllUsers = async (
+    page = 1,
+    limit = 10,
+    search = "",
+    role = "",
+    is_active = "",
+) => {
     const offset = (page - 1) * limit;
 
-    const totalResult = await pool.query(`
-        SELECT COUNT(*) FROM users
-    `);
+    let where = [];
+    let values = [];
+
+    // Search
+    if (search) {
+        values.push(`%${search}%`);
+        where.push(
+            `(fullname ILIKE $${values.length} OR email ILIKE $${values.length})`,
+        );
+    }
+
+    // Role filter
+    if (role) {
+        values.push(role);
+        where.push(`role = $${values.length}`);
+    }
+
+    // Active filter
+    if (is_active !== "") {
+        values.push(is_active === "true");
+        where.push(`is_active = $${values.length}`);
+    }
+
+    const whereQuery = where.length ? "WHERE " + where.join(" AND ") : "";
+
+    // Total
+    const totalResult = await pool.query(
+        `
+        SELECT COUNT(*)
+        FROM users
+        ${whereQuery}
+        `,
+        values,
+    );
 
     const total = Number(totalResult.rows[0].count);
 
+    // Data
     const result = await pool.query(
         `
         SELECT
@@ -19,10 +57,12 @@ const getAllUsers = async (page = 1, limit = 10) => {
             is_active,
             created_at
         FROM users
+        ${whereQuery}
         ORDER BY created_at DESC
-        LIMIT $1 OFFSET $2
+        LIMIT $${values.length + 1}
+        OFFSET $${values.length + 2}
         `,
-        [limit, offset]
+        [...values, limit, offset],
     );
 
     return {
@@ -46,7 +86,7 @@ const getUserById = async (id) => {
         FROM users
         WHERE id = $1
         `,
-        [id]
+        [id],
     );
 
     if (result.rows.length === 0) {
@@ -68,7 +108,7 @@ const getProfile = async (id) => {
         FROM users
         WHERE id = $1
         `,
-        [id]
+        [id],
     );
 
     if (result.rows.length === 0) {

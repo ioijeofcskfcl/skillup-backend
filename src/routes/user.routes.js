@@ -1,7 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-const { getAllUsers,getUserById,getProfile } = require("../controller/user.controller");
+const {
+    getAllUsers,
+    getUserById,
+    getProfile,
+} = require("../controller/user.controller");
 
 const authMiddleware = require("../middleware/auth.middleware");
 const roleMiddleware = require("../middleware/role.middleware");
@@ -20,11 +24,7 @@ const roleMiddleware = require("../middleware/role.middleware");
  *       401:
  *         description: Token mavjud emas yoki noto'g'ri
  */
-router.get(
-    "/profile",
-    authMiddleware,
-    getProfile
-);
+router.get("/profile", authMiddleware, getProfile);
 /**
  * @swagger
  * /api/users:
@@ -49,6 +49,25 @@ router.get(
  *           type: integer
  *           default: 10
  *         description: Har bir sahifadagi foydalanuvchilar soni
+ *       - in: query
+ *         name: search
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Fullname yoki email bo'yicha qidirish
+ *       - in: query
+ *         name: role
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [USER, ADMIN, SUPER_ADMIN]
+ *         description: Role bo'yicha filter
+ *       - in: query
+ *         name: is_active
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *         description: Faol yoki faol bo'lmagan foydalanuvchilarni filterlash
  *     responses:
  *       200:
  *         description: Foydalanuvchilar ro'yxati muvaffaqiyatli olindi
@@ -59,7 +78,7 @@ router.get(
     "/",
     authMiddleware,
     roleMiddleware("ADMIN", "SUPER_ADMIN"),
-    getAllUsers
+    getAllUsers,
 );
 /**
  * @swagger
@@ -86,7 +105,7 @@ router.get(
     "/:id",
     authMiddleware,
     roleMiddleware("ADMIN", "SUPER_ADMIN"),
-    getUserById
+    getUserById,
 );
 
 module.exports = router;

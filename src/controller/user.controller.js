@@ -5,7 +5,17 @@ const getAllUsers = async (req, res) => {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
 
-        const users = await userService.getAllUsers(page, limit);
+        const search = req.query.search || "";
+        const role = req.query.role || "";
+        const is_active = req.query.is_active ?? "";
+
+        const users = await userService.getAllUsers(
+            page,
+            limit,
+            search,
+            role,
+            is_active,
+        );
 
         return res.status(200).json({
             success: true,

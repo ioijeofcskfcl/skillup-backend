@@ -89,6 +89,18 @@ router.post(
  *           type: integer
  *           default: 10
  *         description: Har bir sahifadagi videolar soni
+ *       - in: query
+ *         name: course_id
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Kurs ID bo'yicha filter
+ *       - in: query
+ *         name: search
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Video nomi bo'yicha qidirish
  *     responses:
  *       200:
  *         description: Videolar ro'yxati muvaffaqiyatli olindi
@@ -151,8 +163,8 @@ router.get(
 router.get(
     "/:id",
     authMiddleware,
-    getVideoById,
-    validationMiddleware(updateVideoSchema)
+    getVideoById
+
 );
 
 /**
