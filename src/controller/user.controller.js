@@ -8,6 +8,7 @@ const getAllUsers = async (req, res) => {
         const search = req.query.search || "";
         const role = req.query.role || "";
         const is_active = req.query.is_active ?? "";
+        const sort = req.query.sort || "newest";
 
         const users = await userService.getAllUsers(
             page,
@@ -15,6 +16,7 @@ const getAllUsers = async (req, res) => {
             search,
             role,
             is_active,
+            sort
         );
 
         return res.status(200).json({

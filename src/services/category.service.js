@@ -3,10 +3,9 @@ const pool = require("../db/index");
 
 // CREATE
 const createCategory = async ({ name }) => {
-    const check = await pool.query(
-        "SELECT * FROM categories WHERE name = $1",
-        [name]
-    );
+    const check = await pool.query("SELECT * FROM categories WHERE name = $1", [
+        name,
+    ]);
 
     if (check.rows.length > 0) {
         throw new Error("Bu kategoriya allaqachon mavjud.");
@@ -18,21 +17,64 @@ const createCategory = async ({ name }) => {
         VALUES($1)
         RETURNING *
         `,
-        [name]
+        [name],
     );
 
     return result.rows[0];
 };
 // GET ALL
-const getAllCategories = async (page = 1, limit = 10) => {
+const getAllCategories = async (
+    page = 1,
+    limit = 10,
+    search = "",
+    sort = "newest",
+) => {
     const offset = (page - 1) * limit;
 
-    const totalResult = await pool.query(`
-        SELECT COUNT(*) FROM categories
-    `);
+    let where = [];
+    let values = [];
+
+    // SEARCH
+    if (search) {
+        values.push(`%${search}%`);
+        where.push(`c.name ILIKE $${values.length}`);
+    }
+
+    const whereQuery = where.length ? "WHERE " + where.join(" AND ") : "";
+
+    // SORT
+    let orderBy = "c.created_at DESC";
+
+    switch (sort) {
+        case "oldest":
+            orderBy = "c.created_at ASC";
+            break;
+
+        case "name_asc":
+            orderBy = "c.name ASC";
+            break;
+
+        case "name_desc":
+            orderBy = "c.name DESC";
+            break;
+
+        default:
+            orderBy = "c.created_at DESC";
+    }
+
+    // TOTAL
+    const totalResult = await pool.query(
+        `
+        SELECT COUNT(*)
+        FROM categories c
+        ${whereQuery}
+        `,
+        values,
+    );
 
     const total = Number(totalResult.rows[0].count);
 
+    // DATA
     const result = await pool.query(
         `
         SELECT
@@ -41,11 +83,13 @@ const getAllCategories = async (page = 1, limit = 10) => {
         FROM categories c
         LEFT JOIN courses co
             ON c.id = co.category_id
+        ${whereQuery}
         GROUP BY c.id
-        ORDER BY c.created_at DESC
-        LIMIT $1 OFFSET $2
+        ORDER BY ${orderBy}
+        LIMIT $${values.length + 1}
+        OFFSET $${values.length + 2}
         `,
-        [limit, offset]
+        [...values, limit, offset],
     );
 
     return {
@@ -68,7 +112,7 @@ const getCategoryById = async (id) => {
         WHERE c.id = $1
         GROUP BY c.id
         `,
-        [id]
+        [id],
     );
 
     if (result.rows.length === 0) {
@@ -78,10 +122,9 @@ const getCategoryById = async (id) => {
     return result.rows[0];
 };
 const updateCategory = async (id, { name }) => {
-    const check = await pool.query(
-        "SELECT * FROM categories WHERE id = $1",
-        [id]
-    );
+    const check = await pool.query("SELECT * FROM categories WHERE id = $1", [
+        id,
+    ]);
 
     if (check.rows.length === 0) {
         throw new Error("Kategoriya topilmadi.");
@@ -89,7 +132,7 @@ const updateCategory = async (id, { name }) => {
 
     const duplicate = await pool.query(
         "SELECT * FROM categories WHERE name = $1 AND id <> $2",
-        [name, id]
+        [name, id],
     );
 
     if (duplicate.rows.length > 0) {
@@ -103,16 +146,15 @@ const updateCategory = async (id, { name }) => {
         WHERE id = $2
         RETURNING *
         `,
-        [name, id]
+        [name, id],
     );
 
     return result.rows[0];
 };
 const deleteCategory = async (id) => {
-    const check = await pool.query(
-        "SELECT * FROM categories WHERE id = $1",
-        [id]
-    );
+    const check = await pool.query("SELECT * FROM categories WHERE id = $1", [
+        id,
+    ]);
 
     if (check.rows.length === 0) {
         throw new Error("Kategoriya topilmadi.");
@@ -124,7 +166,7 @@ const deleteCategory = async (id) => {
         WHERE id = $1
         RETURNING *
         `,
-        [id]
+        [id],
     );
 
     return result.rows[0];

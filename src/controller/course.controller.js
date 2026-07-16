@@ -25,12 +25,14 @@ const getAllCourses = async (req, res) => {
         const limit = Number(req.query.limit) || 10;
         const category_id = req.query.category_id || "";
         const search = req.query.search || "";
+        const sort = req.query.sort || "newest";
 
         const courses = await courseService.getAllCourses(
             page,
             limit,
             category_id,
-            search
+            search,
+            sort
         );
         
 

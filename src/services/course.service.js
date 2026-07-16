@@ -10,7 +10,7 @@ const createCourse = async ({
 }) => {
     const category = await pool.query(
         "SELECT * FROM categories WHERE id = $1",
-        [category_id]
+        [category_id],
     );
 
     if (category.rows.length === 0) {
@@ -31,14 +31,7 @@ const createCourse = async ({
         VALUES ($1,$2,$3,$4,$5,$6)
         RETURNING *
         `,
-        [
-            category_id,
-            title,
-            description,
-            price,
-            image_url,
-            created_by,
-        ]
+        [category_id, title, description, price, image_url, created_by],
     );
 
     return result.rows[0];
@@ -48,7 +41,8 @@ const getAllCourses = async (
     page = 1,
     limit = 10,
     category_id = "",
-    search = ""
+    search = "",
+    sort = "newest",
 ) => {
     const offset = (page - 1) * limit;
 
@@ -65,13 +59,11 @@ const getAllCourses = async (
     if (search) {
         values.push(`%${search}%`);
         where.push(
-            `(c.title ILIKE $${values.length} OR c.description ILIKE $${values.length})`
+            `(c.title ILIKE $${values.length} OR c.description ILIKE $${values.length})`,
         );
     }
 
-    const whereQuery = where.length
-        ? "WHERE " + where.join(" AND ")
-        : "";
+    const whereQuery = where.length ? "WHERE " + where.join(" AND ") : "";
 
     // COUNT QUERY
     const totalResult = await pool.query(
@@ -80,11 +72,36 @@ const getAllCourses = async (
         FROM courses c
         ${whereQuery}
         `,
-        values
+        values,
     );
 
     const total = Number(totalResult.rows[0].count);
+    let orderBy = "c.created_at DESC";
 
+    switch (sort) {
+        case "oldest":
+            orderBy = "c.created_at ASC";
+            break;
+
+        case "price_asc":
+            orderBy = "c.price ASC";
+            break;
+
+        case "price_desc":
+            orderBy = "c.price DESC";
+            break;
+
+        case "title_asc":
+            orderBy = "c.title ASC";
+            break;
+
+        case "title_desc":
+            orderBy = "c.title DESC";
+            break;
+
+        default:
+            orderBy = "c.created_at DESC";
+    }
     // MAIN QUERY
     const result = await pool.query(
         `
@@ -96,11 +113,11 @@ const getAllCourses = async (
         LEFT JOIN users u
             ON c.created_by = u.id
         ${whereQuery}
-        ORDER BY c.created_at DESC
+       ORDER BY ${orderBy}
         LIMIT $${values.length + 1}
         OFFSET $${values.length + 2}
         `,
-        [...values, limit, offset]
+        [...values, limit, offset],
     );
 
     return {
@@ -127,7 +144,7 @@ const getCourseById = async (id) => {
             ON c.created_by = u.id
         WHERE c.id = $1
         `,
-        [id]
+        [id],
     );
 
     if (result.rows.length === 0) {
@@ -138,10 +155,9 @@ const getCourseById = async (id) => {
 };
 
 const updateCourse = async (id, data) => {
-    const oldCourse = await pool.query(
-        "SELECT * FROM courses WHERE id = $1",
-        [id]
-    );
+    const oldCourse = await pool.query("SELECT * FROM courses WHERE id = $1", [
+        id,
+    ]);
 
     if (oldCourse.rows.length === 0) {
         throw new Error("Kurs topilmadi.");
@@ -152,7 +168,7 @@ const updateCourse = async (id, data) => {
     if (data.category_id) {
         const category = await pool.query(
             "SELECT * FROM categories WHERE id = $1",
-            [data.category_id]
+            [data.category_id],
         );
 
         if (category.rows.length === 0) {
@@ -179,33 +195,22 @@ const updateCourse = async (id, data) => {
         WHERE id = $6
         RETURNING *
         `,
-        [
-            category_id,
-            title,
-            description,
-            price,
-            image_url,
-            id,
-        ]
+        [category_id, title, description, price, image_url, id],
     );
 
     return result.rows[0];
 };
 
 const deleteCourse = async (id) => {
-    const course = await pool.query(
-        "SELECT id FROM courses WHERE id = $1",
-        [id]
-    );
+    const course = await pool.query("SELECT id FROM courses WHERE id = $1", [
+        id,
+    ]);
 
     if (course.rows.length === 0) {
         throw new Error("Kurs topilmadi.");
     }
 
-    await pool.query(
-        "DELETE FROM courses WHERE id = $1",
-        [id]
-    );
+    await pool.query("DELETE FROM courses WHERE id = $1", [id]);
 };
 
 module.exports = {

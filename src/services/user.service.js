@@ -6,6 +6,7 @@ const getAllUsers = async (
     search = "",
     role = "",
     is_active = "",
+    sort = "newest",
 ) => {
     const offset = (page - 1) * limit;
 
@@ -46,6 +47,32 @@ const getAllUsers = async (
 
     const total = Number(totalResult.rows[0].count);
 
+    let orderBy = "created_at DESC";
+
+    switch (sort) {
+        case "oldest":
+            orderBy = "created_at ASC";
+            break;
+
+        case "name_asc":
+            orderBy = "fullname ASC";
+            break;
+
+        case "name_desc":
+            orderBy = "fullname DESC";
+            break;
+
+        case "email_asc":
+            orderBy = "email ASC";
+            break;
+
+        case "email_desc":
+            orderBy = "email DESC";
+            break;
+
+        default:
+            orderBy = "created_at DESC";
+    }
     // Data
     const result = await pool.query(
         `
@@ -58,7 +85,7 @@ const getAllUsers = async (
             created_at
         FROM users
         ${whereQuery}
-        ORDER BY created_at DESC
+        ORDER BY ${orderBy}
         LIMIT $${values.length + 1}
         OFFSET $${values.length + 2}
         `,
