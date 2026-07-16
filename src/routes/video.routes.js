@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
+const upload = require("../middleware/upload");
 const {
     createVideo,
     getAllVideos,
@@ -31,13 +31,13 @@ const roleMiddleware = require("../middleware/role.middleware");
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
  *               - course_id
  *               - title
- *               - video_url
+ *               - video
  *             properties:
  *               course_id:
  *                 type: string
@@ -45,25 +45,30 @@ const roleMiddleware = require("../middleware/role.middleware");
  *               title:
  *                 type: string
  *                 example: 1-dars. Node.js ga kirish
- *               video_url:
- *                 type: string
- *                 example: https://example.com/video.mp4
  *               duration:
  *                 type: integer
  *                 example: 720
  *               order_number:
  *                 type: integer
  *                 example: 1
+ *               video:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Video muvaffaqiyatli qo'shildi
+ *       400:
+ *         description: Noto'g'ri ma'lumot
+ *       401:
+ *         description: Token mavjud emas yoki noto'g'ri
  */
 router.post(
     "/",
     authMiddleware,
     roleMiddleware("ADMIN"),
+    upload.single("video"),
     createVideo,
-    validationMiddleware(createVideoSchema)
+    validationMiddleware(createVideoSchema),
 );
 /**
  * @swagger
@@ -107,11 +112,7 @@ router.post(
  *       401:
  *         description: Token mavjud emas yoki noto'g'ri
  */
-router.get(
-    "/",
-    authMiddleware,
-    getAllVideos
-);
+router.get("/", authMiddleware, getAllVideos);
 /**
  * @swagger
  * /api/videos/course/{courseId}:
@@ -133,11 +134,7 @@ router.get(
  *       404:
  *         description: Kurs topilmadi
  */
-router.get(
-    "/course/:courseId",
-    authMiddleware,
-    getVideosByCourse
-);
+router.get("/course/:courseId", authMiddleware, getVideosByCourse);
 
 /**
  * @swagger
@@ -160,12 +157,7 @@ router.get(
  *       404:
  *         description: Video topilmadi
  */
-router.get(
-    "/:id",
-    authMiddleware,
-    getVideoById
-
-);
+router.get("/:id", authMiddleware, getVideoById);
 
 /**
  * @swagger
@@ -203,12 +195,7 @@ router.get(
  *       200:
  *         description: Video muvaffaqiyatli yangilandi
  */
-router.put(
-    "/:id",
-    authMiddleware,
-    roleMiddleware("ADMIN"),
-    updateVideo
-);
+router.put("/:id", authMiddleware, roleMiddleware("ADMIN"), updateVideo);
 
 /**
  * @swagger
@@ -231,11 +218,6 @@ router.put(
  *       404:
  *         description: Video topilmadi
  */
-router.delete(
-    "/:id",
-    authMiddleware,
-    roleMiddleware("ADMIN"),
-    deleteVideo
-);
+router.delete("/:id", authMiddleware, roleMiddleware("ADMIN"), deleteVideo);
 
 module.exports = router;

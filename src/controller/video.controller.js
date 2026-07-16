@@ -2,7 +2,20 @@ const videoService = require("../services/video.service");
 
 const createVideo = async (req, res) => {
     try {
-        const video = await videoService.createVideo(req.body);
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Video fayl yuklanmadi.",
+            });
+        }
+
+        const video = await videoService.createVideo({
+            course_id: req.body.course_id,
+            title: req.body.title,
+            duration: req.body.duration,
+            order_number: req.body.order_number,
+            file: req.file,
+        });
 
         return res.status(201).json({
             success: true,
@@ -10,7 +23,7 @@ const createVideo = async (req, res) => {
             data: video,
         });
     } catch (error) {
-        return res.status(400).json({
+        return res.status(500).json({
             success: false,
             message: error.message,
         });

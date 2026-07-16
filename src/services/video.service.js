@@ -1,9 +1,28 @@
 const pool = require("../db/index");
+const { PutObjectCommand } = require("@aws-sdk/client-s3");
+const s3 = require("../config/s3");
+const crypto = require("crypto");
+
+const uploadVideoToS3 = async (file) => {
+    const fileName =
+        crypto.randomBytes(16).toString("hex") + "-" + Date.now() + ".mp4";
+
+    const command = new PutObjectCommand({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: `videos/${fileName}`,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+    });
+
+    await s3.send(command);
+
+    return `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/videos/${fileName}`;
+};
 
 const createVideo = async ({
     course_id,
     title,
-    video_url,
+    file,
     duration,
     order_number,
 }) => {
@@ -11,6 +30,7 @@ const createVideo = async ({
     const course = await pool.query("SELECT id FROM courses WHERE id = $1", [
         course_id,
     ]);
+    const video_url = await uploadVideoToS3(file);
 
     if (course.rows.length === 0) {
         throw new Error("Bunday kurs mavjud emas.");
