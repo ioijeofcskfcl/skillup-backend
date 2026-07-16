@@ -39,6 +39,7 @@ const getAllVideos = async (
     limit = 10,
     course_id = "",
     search = "",
+    sort = "order_asc",
 ) => {
     const offset = (page - 1) * limit;
 
@@ -71,6 +72,32 @@ const getAllVideos = async (
 
     const total = Number(totalResult.rows[0].count);
 
+    let orderBy = "v.order_number ASC";
+
+    switch (sort) {
+        case "order_desc":
+            orderBy = "v.order_number DESC";
+            break;
+
+        case "title_asc":
+            orderBy = "v.title ASC";
+            break;
+
+        case "title_desc":
+            orderBy = "v.title DESC";
+            break;
+
+        case "newest":
+            orderBy = "v.created_at DESC";
+            break;
+
+        case "oldest":
+            orderBy = "v.created_at ASC";
+            break;
+
+        default:
+            orderBy = "v.order_number ASC";
+    }
     // Asosiy so'rov
     const result = await pool.query(
         `
@@ -81,7 +108,7 @@ const getAllVideos = async (
         LEFT JOIN courses c
             ON v.course_id = c.id
         ${whereQuery}
-        ORDER BY v.order_number ASC
+        ORDER BY ${orderBy}
         LIMIT $${values.length + 1}
         OFFSET $${values.length + 2}
         `,

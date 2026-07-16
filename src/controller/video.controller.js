@@ -23,12 +23,14 @@ const getAllVideos = async (req, res) => {
 
         const course_id = req.query.course_id || "";
         const search = req.query.search || "";
+        const sort = req.query.sort || "order_asc";
 
         const videos = await videoService.getAllVideos(
             page,
             limit,
             course_id,
-            search
+            search,
+            sort,
         );
 
         return res.status(200).json({
@@ -59,10 +61,7 @@ const getVideoById = async (req, res) => {
 };
 const updateVideo = async (req, res) => {
     try {
-        const video = await videoService.updateVideo(
-            req.params.id,
-            req.body
-        );
+        const video = await videoService.updateVideo(req.params.id, req.body);
 
         return res.status(200).json({
             success: true,
@@ -94,7 +93,7 @@ const deleteVideo = async (req, res) => {
 const getVideosByCourse = async (req, res) => {
     try {
         const videos = await videoService.getVideosByCourse(
-            req.params.courseId
+            req.params.courseId,
         );
 
         return res.status(200).json({
@@ -115,7 +114,5 @@ module.exports = {
     getVideoById,
     updateVideo,
     deleteVideo,
-    getVideosByCourse
+    getVideosByCourse,
 };
-    
-
