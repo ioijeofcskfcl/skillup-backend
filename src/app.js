@@ -16,7 +16,17 @@ const cors = require("cors");
 const loggerMiddleware = require("./middleware/logger.middleware");
 
 app.use(express.json());
-app.use(cors());
+app.use(
+    cors({
+        origin: [
+            "http://localhost:5173", // React (Vite)
+            "http://localhost:3000", // Next.js (agar ishlatsang)
+        ],
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    }),
+);
 app.use(loggerMiddleware);
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
