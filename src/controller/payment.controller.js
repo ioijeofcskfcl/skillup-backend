@@ -1,6 +1,6 @@
 const paymentService = require("../services/payment.service");
 
-const createPayment = async (req, res) => {
+const createPayment = async (req, res, next) => {
     console.log("REQ.USER:", req.user);
     console.log("REQ.BODY:", req.body);
 
@@ -17,13 +17,10 @@ const createPayment = async (req, res) => {
             data: payment,
         });
     } catch (error) {
-        return res.status(400).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const getMyCourses = async (req, res) => {
+const getMyCourses = async (req, res, next) => {
     try {
         const courses = await paymentService.getMyCourses(req.user.id);
 
@@ -32,10 +29,7 @@ const getMyCourses = async (req, res) => {
             data: courses,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
 

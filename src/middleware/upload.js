@@ -1,4 +1,6 @@
 const multer = require("multer");
+const AppError = require("../utils/utilsAppError");
+
 
 const storage = multer.memoryStorage();
 
@@ -19,7 +21,7 @@ const upload = multer({
         ];
 
         if (!allowedTypes.includes(file.mimetype)) {
-            return cb(new Error("Faqat video fayl yuklash mumkin."));
+            throw new AppError("Faqat video fayllarni yuklash mumkin.", 415);
         }
 
         cb(null, true);

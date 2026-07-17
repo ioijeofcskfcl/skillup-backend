@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const redisClient = require("../redis/redis");
 const nodemailer = require("nodemailer");
+const AppError = require("../utils/utilsAppError");
+
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -13,7 +15,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // 1. LOGIN FUNKSIYASI
-const login = async (req, res) => {
+const login = async (req, res,next) => {
     const { email, password } = req.body;
     try {
         const userCheck = await pool.query(
@@ -21,16 +23,12 @@ const login = async (req, res) => {
             [email],
         );
         if (userCheck.rows.length === 0)
-            return res
-                .status(401)
-                .json({ message: "Email yoki parol noto'g'ri!" });
+          throw new AppError("Email yoki parol noto'g'ri.", 401);
 
         const user = userCheck.rows[0];
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch)
-            return res
-                .status(401)
-                .json({ message: "Email yoki parol noto'g'ri!" });
+           throw new AppError("Email yoki parol noto'g'ri.", 401);
 
         const token = jwt.sign(
             {
@@ -47,22 +45,18 @@ const login = async (req, res) => {
             token,
             user: { email: user.email, role: user.role },
         });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } catch (error) {
+        next(error)
     }
 };
 
 // 2. REGISTER FUNKSIYASI
-const register = async (req, res) => {
+const register = async (req, res,next) => {
     const { email, password } = req.body;
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
     if (!passwordRegex.test(password)) {
-        return res.status(400).json({
-            success: false,
-            message:
-                "Parol kamida 8 ta belgidan iborat bo'lishi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.",
-        });
+        throw new AppError("Parol kamida 8 ta belgidan iborat bo'lishi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.",400)
     }
     try {
         const userCheck = await pool.query(
@@ -70,9 +64,7 @@ const register = async (req, res) => {
             [email],
         );
         if (userCheck.rows.length > 0)
-            return res
-                .status(400)
-                .json({ message: "Bu email allaqachon ro'yxatdan o'tgan!" });
+            throw new AppError("Email allaqachon mavjud.",409)
 
         const verificationCode = Math.floor(
             100000 + Math.random() * 900000,
@@ -91,28 +83,24 @@ const register = async (req, res) => {
         });
 
         res.status(200).json({ message: "Tasdiqlash kodi yuborildi!", email });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } catch (error) {
+        next(error)
     }
 };
-const verify = async (req, res) => {
+const verify = async (req, res,next) => {
     const { email, code } = req.body;
 
     try {
         const data = await redisClient.get(`register:${email}`);
 
         if (!data) {
-            return res.status(400).json({
-                message: "Kodning amal qilish muddati tugagan.",
-            });
+            throw new AppError("Amal qilish muddati tugagan.",401)
         }
 
         const parsedData = JSON.parse(data);
 
         if (parsedData.code !== code) {
-            return res.status(400).json({
-                message: "Tasdiqlash kodi noto'g'ri.",
-            });
+            throw new AppError("Tasdiqlash kodi noto'g'ri.", 400);
         }
 
         const hashedPassword = await bcrypt.hash(parsedData.password, 10);
@@ -143,21 +131,18 @@ const verify = async (req, res) => {
             user: user.rows[0],
         });
     } catch (error) {
-        res.status(500).json({
-            error: error.message,
-        });
+        next(error)
     }
 };
-const resendOtp = async (req, res) => {
+const resendOtp = async (req, res,next) => {
     const { email } = req.body;
 
     try {
         const data = await redisClient.get(`register:${email}`);
 
         if (!data) {
-            return res.status(400).json({
-                message: "Avval ro'yxatdan o'ting.",
-            });
+             throw new AppError("Avval ro'yxatdan o'ting.",400)
+            
         }
 
         const parsedData = JSON.parse(data);
@@ -186,12 +171,10 @@ const resendOtp = async (req, res) => {
             message: "Yangi tasdiqlash kodi yuborildi.",
         });
     } catch (error) {
-        res.status(500).json({
-            error: error.message,
-        });
+        next(error)
     }
 };
-const forgotPassword = async (req, res) => {
+const forgotPassword = async (req, res,next) => {
     const { email } = req.body;
 
     try {
@@ -200,10 +183,7 @@ const forgotPassword = async (req, res) => {
         ]);
 
         if (user.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Bunday email mavjud emas.",
-            });
+           throw new AppError("Bunday email mavjud emas.", 404);
         }
 
         const verificationCode = Math.floor(
@@ -224,22 +204,15 @@ const forgotPassword = async (req, res) => {
             message: "Parolni tiklash kodi yuborildi.",
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message,
-        });
+        next(error)
     }
 };
-const resetPassword = async (req, res) => {
+const resetPassword = async (req, res,next) => {
     const { email, code, password } = req.body;
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
     if (!passwordRegex.test(password)) {
-        return res.status(400).json({
-            success: false,
-            message:
-                "Parol kamida 8 ta belgidan iborat bo'lishi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.",
-        });
+        throw new AppError("Parol kamida 8 ta belgidan iborat bo'lishi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.",400)
     }
 
     try {
@@ -253,10 +226,7 @@ const resetPassword = async (req, res) => {
         }
 
         if (savedCode !== code) {
-            return res.status(400).json({
-                success: false,
-                message: "Tasdiqlash kodi noto'g'ri.",
-            });
+            throw new AppError("Tasdiqlash kodi noto'g'ri.", 400);
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -273,23 +243,17 @@ const resetPassword = async (req, res) => {
             message: "Parol muvaffaqiyatli yangilandi.",
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message,
-        });
+       next(error)
     }
 };
-const logout = async (req, res) => {
+const logout = async (req, res,next) => {
     try {
         res.status(200).json({
             success: true,
             message: "Tizimdan muvaffaqiyatli chiqildi.",
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message,
-        });
+        next(error)
     }
 };
 module.exports = {

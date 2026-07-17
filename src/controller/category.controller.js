@@ -1,6 +1,6 @@
 const categoryService = require("../services/category.service");
 
-const createCategory = async (req, res) => {
+const createCategory = async (req, res, next) => {
     try {
         const category = await categoryService.createCategory(req.body);
 
@@ -10,13 +10,10 @@ const createCategory = async (req, res) => {
             data: category,
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const getAllCategories = async (req, res) => {
+const getAllCategories = async (req, res, next) => {
     try {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
@@ -36,13 +33,10 @@ const getAllCategories = async (req, res) => {
             ...categories,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const getCategoryById = async (req, res) => {
+const getCategoryById = async (req, res, next) => {
     try {
         const category = await categoryService.getCategoryById(req.params.id);
 
@@ -51,13 +45,10 @@ const getCategoryById = async (req, res) => {
             data: category,
         });
     } catch (error) {
-        res.status(404).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const updateCategory = async (req, res) => {
+const updateCategory = async (req, res, next) => {
     try {
         const category = await categoryService.updateCategory(
             req.params.id,
@@ -70,13 +61,10 @@ const updateCategory = async (req, res) => {
             data: category,
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const deleteCategory = async (req, res) => {
+const deleteCategory = async (req, res, next) => {
     try {
         const category = await categoryService.deleteCategory(req.params.id);
 
@@ -86,10 +74,7 @@ const deleteCategory = async (req, res) => {
             data: category,
         });
     } catch (error) {
-        res.status(404).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
 module.exports = {

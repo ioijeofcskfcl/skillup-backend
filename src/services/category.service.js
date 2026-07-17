@@ -1,5 +1,6 @@
 const { get } = require("../app");
 const pool = require("../db/index");
+const AppError = require("../utils/utilsAppError");
 
 // CREATE
 const createCategory = async ({ name }) => {
@@ -8,7 +9,7 @@ const createCategory = async ({ name }) => {
     ]);
 
     if (check.rows.length > 0) {
-        throw new Error("Bu kategoriya allaqachon mavjud.");
+        throw new AppError("Bu kategoriya allaqachon mavjud.", 409);
     }
 
     const result = await pool.query(
@@ -116,7 +117,7 @@ const getCategoryById = async (id) => {
     );
 
     if (result.rows.length === 0) {
-        throw new Error("Kategoriya topilmadi.");
+        throw new AppError("Kategoriya topilmadi.", 404);
     }
 
     return result.rows[0];
@@ -127,7 +128,7 @@ const updateCategory = async (id, { name }) => {
     ]);
 
     if (check.rows.length === 0) {
-        throw new Error("Kategoriya topilmadi.");
+        throw new AppError("Kategoriya topilmadi.", 404);
     }
 
     const duplicate = await pool.query(
@@ -136,7 +137,7 @@ const updateCategory = async (id, { name }) => {
     );
 
     if (duplicate.rows.length > 0) {
-        throw new Error("Bu nomdagi kategoriya allaqachon mavjud.");
+        throw new AppError("Bu nomdagi kategoriya allaqachon mavjud.", 409);
     }
 
     const result = await pool.query(
@@ -157,7 +158,7 @@ const deleteCategory = async (id) => {
     ]);
 
     if (check.rows.length === 0) {
-        throw new Error("Kategoriya topilmadi.");
+        throw new AppError("Kategoriya topilmadi.", 404);
     }
 
     const result = await pool.query(

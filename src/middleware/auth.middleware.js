@@ -1,14 +1,12 @@
 const jwt = require("jsonwebtoken");
+const AppError = require("../utils/utilsAppError");
 
 const authMiddleware = (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({
-                success: false,
-                message: "Token topilmadi."
-            });
+            throw new AppError("To'ken noto'g'ri.",401)
         }
 
         const token = authHeader.split(" ")[1];
@@ -22,10 +20,7 @@ const authMiddleware = (req, res, next) => {
 
         next();
     } catch (error) {
-        return res.status(401).json({
-            success: false,
-            message: "Token noto'g'ri yoki muddati tugagan."
-        });
+        next(error)
     }
 };
 

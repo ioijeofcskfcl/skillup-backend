@@ -1,6 +1,6 @@
     const dashboardService = require("../services/dashboard.service");
 
-const getDashboard = async (req, res) => {
+const getDashboard = async (req, res,next) => {
     try {
         const dashboard = await dashboardService.getDashboard();
 
@@ -9,10 +9,7 @@ const getDashboard = async (req, res) => {
             data: dashboard,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        next(error)
     }
 };
 

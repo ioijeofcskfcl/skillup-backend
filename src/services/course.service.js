@@ -1,4 +1,5 @@
 const pool = require("../db/index");
+const AppError = require("../utils/utilsAppError");
 
 const createCourse = async ({
     category_id,
@@ -14,7 +15,7 @@ const createCourse = async ({
     );
 
     if (category.rows.length === 0) {
-        throw new Error("Kategoriya topilmadi.");
+        throw new AppError("Kategoriya topilmadi.", 404);
     }
 
     const result = await pool.query(
@@ -148,7 +149,7 @@ const getCourseById = async (id) => {
     );
 
     if (result.rows.length === 0) {
-        throw new Error("Kurs topilmadi.");
+        throw new AppError("Kurs topilmadi.", 404);
     }
 
     return result.rows[0];
@@ -160,7 +161,7 @@ const updateCourse = async (id, data) => {
     ]);
 
     if (oldCourse.rows.length === 0) {
-        throw new Error("Kurs topilmadi.");
+        throw new AppError("Kurs topilmadi.", 404);
     }
 
     const course = oldCourse.rows[0];
@@ -172,7 +173,7 @@ const updateCourse = async (id, data) => {
         );
 
         if (category.rows.length === 0) {
-            throw new Error("Kategoriya topilmadi.");
+            throw new AppError("Kategoriya topilmadi.", 404);
         }
     }
 
@@ -207,7 +208,7 @@ const deleteCourse = async (id) => {
     ]);
 
     if (course.rows.length === 0) {
-        throw new Error("Kurs topilmadi.");
+        throw new AppError("Kurs topilmadi.", 404);
     }
 
     await pool.query("DELETE FROM courses WHERE id = $1", [id]);

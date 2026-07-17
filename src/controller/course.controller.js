@@ -1,6 +1,6 @@
 const courseService = require("../services/course.service");
 
-const createCourse = async (req, res) => {
+const createCourse = async (req, res, next) => {
     try {
         const course = await courseService.createCourse({
             ...req.body,
@@ -13,13 +13,10 @@ const createCourse = async (req, res) => {
             data: course,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const getAllCourses = async (req, res) => {
+const getAllCourses = async (req, res, next) => {
     try {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
@@ -32,22 +29,18 @@ const getAllCourses = async (req, res) => {
             limit,
             category_id,
             search,
-            sort
+            sort,
         );
-        
 
         return res.status(200).json({
             success: true,
             ...courses,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const getCourseById = async (req, res) => {
+const getCourseById = async (req, res, next) => {
     try {
         const course = await courseService.getCourseById(req.params.id);
 
@@ -56,17 +49,14 @@ const getCourseById = async (req, res) => {
             data: course,
         });
     } catch (error) {
-        return res.status(404).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const updateCourse = async (req, res) => {
+const updateCourse = async (req, res, next) => {
     try {
         const course = await courseService.updateCourse(
             req.params.id,
-            req.body
+            req.body,
         );
 
         return res.status(200).json({
@@ -75,13 +65,10 @@ const updateCourse = async (req, res) => {
             data: course,
         });
     } catch (error) {
-        return res.status(404).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const deleteCourse = async (req, res) => {
+const deleteCourse = async (req, res, next) => {
     try {
         await courseService.deleteCourse(req.params.id);
 
@@ -90,10 +77,7 @@ const deleteCourse = async (req, res) => {
             message: "Kurs muvaffaqiyatli o'chirildi.",
         });
     } catch (error) {
-        return res.status(404).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
 

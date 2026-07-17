@@ -11,9 +11,13 @@ const paymentRoutes = require("./routes/payment.routes");
 const categoryRoutes = require("./routes/category.routes");
 const userRoutes = require("./routes/user.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
-
+const errorMiddleware = require("./middleware/error.middleware");
+const cors = require("cors");
+const loggerMiddleware = require("./middleware/logger.middleware");
 
 app.use(express.json());
+app.use(cors());
+app.use(loggerMiddleware);
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/api/auth", authRoutes);
@@ -25,5 +29,6 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
+app.use(errorMiddleware);
 
 module.exports = app;

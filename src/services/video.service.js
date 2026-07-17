@@ -2,6 +2,7 @@ const pool = require("../db/index");
 const { PutObjectCommand } = require("@aws-sdk/client-s3");
 const s3 = require("../config/s3");
 const crypto = require("crypto");
+const AppError = require("../utils/utilsAppError");
 
 const uploadVideoToS3 = async (file) => {
     const fileName =
@@ -30,11 +31,11 @@ const createVideo = async ({
     const course = await pool.query("SELECT id FROM courses WHERE id = $1", [
         course_id,
     ]);
-    const video_url = await uploadVideoToS3(file);
 
     if (course.rows.length === 0) {
-        throw new Error("Bunday kurs mavjud emas.");
+        throw new AppError("Bunday kurs mavjud emas.", 404);
     }
+    const video_url = await uploadVideoToS3(file);
 
     const result = await pool.query(
         `
@@ -158,7 +159,7 @@ const getVideoById = async (id) => {
     );
 
     if (result.rows.length === 0) {
-        throw new Error("Video topilmadi.");
+        throw new AppError("Video topilmadi.", 404);
     }
 
     return result.rows[0];
@@ -169,7 +170,7 @@ const updateVideo = async (id, data) => {
     ]);
 
     if (oldVideo.rows.length === 0) {
-        throw new Error("Video topilmadi.");
+        throw new AppError("Video topilmadi.", 404);
     }
 
     const video = oldVideo.rows[0];
@@ -186,7 +187,7 @@ const updateVideo = async (id, data) => {
     ]);
 
     if (course.rows.length === 0) {
-        throw new Error("Bunday kurs mavjud emas.");
+        throw new AppError("Bunday kurs mavjud emas.", 404);
     }
 
     const result = await pool.query(
@@ -211,7 +212,7 @@ const deleteVideo = async (id) => {
     const video = await pool.query("SELECT id FROM videos WHERE id = $1", [id]);
 
     if (video.rows.length === 0) {
-        throw new Error("Video topilmadi.");
+        throw new AppError("Video topilmadi.", 400);
     }
 
     await pool.query("DELETE FROM videos WHERE id = $1", [id]);
@@ -224,7 +225,7 @@ const getVideosByCourse = async (courseId) => {
     ]);
 
     if (course.rows.length === 0) {
-        throw new Error("Kurs topilmadi.");
+        throw new AppError("kurs topilmadi.", 400);
     }
 
     const result = await pool.query(

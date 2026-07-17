@@ -1,6 +1,7 @@
 const userService = require("../services/user.service");
+const AppError = require("../utils/utilsAppError");
 
-const getAllUsers = async (req, res) => {
+const getAllUsers = async (req, res, next) => {
     try {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
@@ -16,7 +17,7 @@ const getAllUsers = async (req, res) => {
             search,
             role,
             is_active,
-            sort
+            sort,
         );
 
         return res.status(200).json({
@@ -24,13 +25,10 @@ const getAllUsers = async (req, res) => {
             ...users,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const getUserById = async (req, res) => {
+const getUserById = async (req, res, next) => {
     try {
         const user = await userService.getUserById(req.params.id);
 
@@ -39,13 +37,10 @@ const getUserById = async (req, res) => {
             data: user,
         });
     } catch (error) {
-        return res.status(404).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const getProfile = async (req, res) => {
+const getProfile = async (req, res, next) => {
     try {
         const profile = await userService.getProfile(req.user.id);
 
@@ -54,10 +49,7 @@ const getProfile = async (req, res) => {
             data: profile,
         });
     } catch (error) {
-        return res.status(404).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
 module.exports = {

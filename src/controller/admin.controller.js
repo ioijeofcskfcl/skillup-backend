@@ -1,6 +1,6 @@
 const adminService = require("../services/admin.service");
 
-const createAdmin = async (req, res) => {
+const createAdmin = async (req, res, next) => {
     try {
         const admin = await adminService.createAdmin(req.body);
 
@@ -10,13 +10,10 @@ const createAdmin = async (req, res) => {
             data: admin,
         });
     } catch (error) {
-        return res.status(400).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const getAllAdmins = async (req, res) => {
+const getAllAdmins = async (req, res, next) => {
     try {
         const admins = await adminService.getAllAdmins();
 
@@ -25,13 +22,10 @@ const getAllAdmins = async (req, res) => {
             data: admins,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const getAdminById = async (req, res) => {
+const getAdminById = async (req, res, next) => {
     try {
         const admin = await adminService.getAdminById(req.params.id);
 
@@ -40,13 +34,10 @@ const getAdminById = async (req, res) => {
             data: admin,
         });
     } catch (error) {
-        return res.status(404).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const updateAdmin = async (req, res) => {
+const updateAdmin = async (req, res, next) => {
     try {
         const admin = await adminService.updateAdmin(req.params.id, req.body);
 
@@ -56,13 +47,10 @@ const updateAdmin = async (req, res) => {
             data: admin,
         });
     } catch (error) {
-        return res.status(400).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const deleteAdmin = async (req, res) => {
+const deleteAdmin = async (req, res, next) => {
     try {
         await adminService.deleteAdmin(req.params.id);
 
@@ -71,10 +59,7 @@ const deleteAdmin = async (req, res) => {
             message: "Admin muvaffaqiyatli o'chirildi.",
         });
     } catch (error) {
-        return res.status(404).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
 

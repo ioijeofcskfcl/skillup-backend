@@ -1,14 +1,14 @@
 const pool = require("../db/index");
 const bcrypt = require("bcryptjs");
+const AppError = require("../utils/utilsAppError");
 
 const createAdmin = async ({ fullname, email, password }) => {
-    const admin = await pool.query(
-        "SELECT id FROM users WHERE email = $1",
-        [email]
-    );
+    const admin = await pool.query("SELECT id FROM users WHERE email = $1", [
+        email,
+    ]);
 
     if (admin.rows.length > 0) {
-        throw new Error("Bu email allaqachon mavjud.");
+        throw new AppError("Bu email allaqachon mavjud.", 409);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -26,11 +26,7 @@ const createAdmin = async ({ fullname, email, password }) => {
         VALUES ($1,$2,$3,'ADMIN',true,true)
         RETURNING id, fullname, email, role, is_active, created_at
         `,
-        [
-            fullname,
-            email,
-            hashedPassword
-        ]
+        [fullname, email, hashedPassword],
     );
 
     return result.rows[0];
@@ -48,7 +44,7 @@ const getAllAdmins = async () => {
         FROM users
         WHERE role = 'ADMIN'
         ORDER BY created_at DESC
-        `
+        `,
     );
 
     return result.rows;
@@ -67,11 +63,11 @@ const getAdminById = async (id) => {
         WHERE id = $1
         AND role = 'ADMIN'
         `,
-        [id]
+        [id],
     );
 
     if (result.rows.length === 0) {
-        throw new Error("Admin topilmadi.");
+        throw new AppError("Admin topilmadi.", 404);
     }
 
     return result.rows[0];
@@ -79,11 +75,11 @@ const getAdminById = async (id) => {
 const updateAdmin = async (id, { fullname, email, password }) => {
     const admin = await pool.query(
         "SELECT * FROM users WHERE id = $1 AND role = 'ADMIN'",
-        [id]
+        [id],
     );
 
     if (admin.rows.length === 0) {
-        throw new Error("Admin topilmadi.");
+        throw new AppError("Admin topilmadi.", 404);
     }
 
     const currentAdmin = admin.rows[0];
@@ -114,7 +110,7 @@ const updateAdmin = async (id, { fullname, email, password }) => {
             email || currentAdmin.email,
             hashedPassword,
             id,
-        ]
+        ],
     );
 
     return result.rows[0];
@@ -122,17 +118,14 @@ const updateAdmin = async (id, { fullname, email, password }) => {
 const deleteAdmin = async (id) => {
     const admin = await pool.query(
         "SELECT id FROM users WHERE id = $1 AND role = 'ADMIN'",
-        [id]
+        [id],
     );
 
     if (admin.rows.length === 0) {
-        throw new Error("Admin topilmadi.");
+        throw new AppError("Admin topilmadi.", 404);
     }
 
-    await pool.query(
-        "DELETE FROM users WHERE id = $1",
-        [id]
-    );
+    await pool.query("DELETE FROM users WHERE id = $1", [id]);
 
     return;
 };
@@ -142,5 +135,4 @@ module.exports = {
     getAdminById,
     updateAdmin,
     deleteAdmin,
-
 };

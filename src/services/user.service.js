@@ -1,4 +1,5 @@
 const pool = require("../db/index");
+const AppError = require("../utils/utilsAppError");
 
 const getAllUsers = async (
     page = 1,
@@ -117,7 +118,7 @@ const getUserById = async (id) => {
     );
 
     if (result.rows.length === 0) {
-        throw new Error("Foydalanuvchi topilmadi.");
+        throw new AppError("Bunday kurs mavjud emas.", 404);
     }
 
     return result.rows[0];
@@ -139,7 +140,7 @@ const getProfile = async (id) => {
     );
 
     if (result.rows.length === 0) {
-        throw new Error("Foydalanuvchi topilmadi.");
+        throw new AppError("Foydalanuvchi topilmadi.", 400);
     }
 
     return result.rows[0];

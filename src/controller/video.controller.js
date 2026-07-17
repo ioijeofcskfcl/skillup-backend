@@ -1,12 +1,10 @@
 const videoService = require("../services/video.service");
+const AppError = require("../utils/utilsAppError");
 
-const createVideo = async (req, res) => {
+const createVideo = async (req, res, next) => {
     try {
         if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: "Video fayl yuklanmadi.",
-            });
+            throw new AppError("Video yuklanmadi.", 400);
         }
 
         const video = await videoService.createVideo({
@@ -23,13 +21,10 @@ const createVideo = async (req, res) => {
             data: video,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const getAllVideos = async (req, res) => {
+const getAllVideos = async (req, res, next) => {
     try {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
@@ -51,13 +46,10 @@ const getAllVideos = async (req, res) => {
             ...videos,
         });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const getVideoById = async (req, res) => {
+const getVideoById = async (req, res, next) => {
     try {
         const video = await videoService.getVideoById(req.params.id);
 
@@ -66,13 +58,10 @@ const getVideoById = async (req, res) => {
             data: video,
         });
     } catch (error) {
-        return res.status(404).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const updateVideo = async (req, res) => {
+const updateVideo = async (req, res, next) => {
     try {
         const video = await videoService.updateVideo(req.params.id, req.body);
 
@@ -82,13 +71,10 @@ const updateVideo = async (req, res) => {
             data: video,
         });
     } catch (error) {
-        return res.status(400).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const deleteVideo = async (req, res) => {
+const deleteVideo = async (req, res, next) => {
     try {
         await videoService.deleteVideo(req.params.id);
 
@@ -97,13 +83,10 @@ const deleteVideo = async (req, res) => {
             message: "Video muvaffaqiyatli o'chirildi.",
         });
     } catch (error) {
-        return res.status(404).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
-const getVideosByCourse = async (req, res) => {
+const getVideosByCourse = async (req, res, next) => {
     try {
         const videos = await videoService.getVideosByCourse(
             req.params.courseId,
@@ -115,10 +98,7 @@ const getVideosByCourse = async (req, res) => {
             data: videos,
         });
     } catch (error) {
-        return res.status(404).json({
-            success: false,
-            message: error.message,
-        });
+        next(error);
     }
 };
 module.exports = {
