@@ -1,14 +1,14 @@
-const { createClient } = require("redis");
+// const { createClient } = require("redis");
 
-const redisClient = createClient({ url: "redis://127.0.0.1:6379" });
+// const redisClient = createClient({ url: "redis://127.0.0.1:6379" });
 
-redisClient.on("error", (err) => {
-    console.log("Redis Error:", err);
-});
+// redisClient.on("error", (err) => {
+//     console.log("Redis Error:", err);
+// });
 
-(async () => {
-    await redisClient.connect();
-    console.log("Redis Connected");
-})();
+// (async () => {
+//     await redisClient.connect();
+//     console.log("Redis Connected");
+// })();
 
-module.exports = redisClient;
+// module.exports = redisClient;
