@@ -6,15 +6,13 @@ const swaggerOptions = {
         info: {
             title: "SkillUp API",
             version: "1.0.0",
-            description: "SkillUp API hujjatlari",
+            description: "SkillUp API",
         },
-
         servers: [
             {
-                url: process.env.API_URL || "http://localhost:5001",
+                url: process.env.BASE_URL,
             },
         ],
-
         components: {
             securitySchemes: {
                 bearerAuth: {
@@ -24,14 +22,12 @@ const swaggerOptions = {
                 },
             },
         },
-
         security: [
             {
                 bearerAuth: [],
             },
         ],
     },
-
     apis: ["./src/routes/*.js"],
 };
 
