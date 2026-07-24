@@ -73,7 +73,7 @@ router.post("/register", register, validationMiddleware(registerSchema));
  *       200:
  *         description: Kirish muvaffaqiyatli
  */
-router.post("/login", login, validationMiddleware(loginSchema),);
+router.post("/login", validationMiddleware(loginSchema), login);
 
 /**
  * @swagger
@@ -104,7 +104,7 @@ router.post("/login", login, validationMiddleware(loginSchema),);
  *       400:
  *         description: Kod noto'g'ri yoki muddati tugagan
  */
-router.post("/verify", verify, );
+router.post("/verify", verify);
 /**
  * @swagger
  * /api/auth/resend-otp:
@@ -128,7 +128,7 @@ router.post("/verify", verify, );
  *       200:
  *         description: Yangi tasdiqlash kodi yuborildi
  */
-router.post("/resend-otp", resendOtp, );
+router.post("/resend-otp", resendOtp);
 /**
  * @swagger
  * /api/auth/forgot-password:
@@ -152,7 +152,11 @@ router.post("/resend-otp", resendOtp, );
  *       200:
  *         description: Parolni tiklash kodi yuborildi
  */
-router.post("/forgot-password", forgotPassword, validationMiddleware(forgotPasswordSchema));
+router.post(
+    "/forgot-password",
+    validationMiddleware(forgotPasswordSchema),
+    forgotPassword,
+);
 /**
  * @swagger
  * /api/auth/reset-password:
@@ -184,7 +188,11 @@ router.post("/forgot-password", forgotPassword, validationMiddleware(forgotPassw
  *       200:
  *         description: Parol muvaffaqiyatli yangilandi
  */
-router.post("/reset-password", resetPassword, validationMiddleware(resetPasswordSchema));
+router.post(
+    "/reset-password",
+    validationMiddleware(resetPasswordSchema),
+    resetPassword,
+);
 
 /**
  * @swagger
