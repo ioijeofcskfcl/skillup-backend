@@ -1,21 +1,10 @@
-const logger = require("../config/logger");
+const errorMiddleware = (err, req, res, next) => {
+    console.error(err);
 
-const loggerMiddleware = (req, res, next) => {
-    const start = Date.now();
-
-    res.on("finish", () => {
-        const duration = Date.now() - start;
-
-        logger.info({
-            method: req.method,
-            url: req.originalUrl,
-            status: res.statusCode,
-            duration: `${duration}ms`,
-            ip: req.ip,
-        });
+    return res.status(err.status || 500).json({
+        success: false,
+        message: err.message || "Internal Server Error",
     });
-
-    next();
 };
 
-module.exports = loggerMiddleware;
+module.exports = errorMiddleware;

@@ -16,15 +16,11 @@ const cors = require("cors");
 const loggerMiddleware = require("./middleware/logger.middleware");
 
 app.use(express.json());
+
 app.use(
     cors({
-        origin: [
-            "http://localhost:5173", // React (Vite)
-            "http://localhost:3000", // Next.js (agar ishlatsang)
-        ],
+        origin: true,
         credentials: true,
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-        allowedHeaders: ["Content-Type", "Authorization"],
     }),
 );
 app.use(loggerMiddleware);
