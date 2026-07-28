@@ -16,7 +16,7 @@ const registerSchema = Joi.object({
             "any.required": "Ism-familiya kiritilishi shart.",
         }),
 
-    email: Joi.string()
+    email: Joi.string() 
         .trim()
         .email()
         .required()

@@ -21,7 +21,7 @@ const {
  * @swagger
  * /api/auth/register:
  *   post:
- *     summary: Ro'yxatdan o'tish
+ *     summary: Foydalanuvchini ro'yxatdan o'tkazish
  *     tags:
  *       - Autentifikatsiya
  *     requestBody:
@@ -31,21 +31,30 @@ const {
  *           schema:
  *             type: object
  *             required:
+ *               - fullname
  *               - email
  *               - password
  *             properties:
+ *               fullname:
+ *                 type: string
+ *                 example: "Ogabek Jumanazarov"
  *               email:
  *                 type: string
- *                 example: jumanazarovogabek773@gmail.com
+ *                 format: email
+ *                 example: "ogabek@gmail.com"
  *               password:
  *                 type: string
- *                 example: "111111"
+ *                 example: "Ogabek123"
  *     responses:
  *       200:
- *         description: Tasdiqlash kodi yuborildi
+ *         description: Tasdiqlash kodi emailga yuborildi
+ *       400:
+ *         description: Noto'g'ri ma'lumot
+ *       409:
+ *         description: Email allaqachon mavjud
  */
-router.post("/register", register, validationMiddleware(registerSchema));
 
+router.post("/register", validationMiddleware(registerSchema), register);
 /**
  * @swagger
  * /api/auth/login:
