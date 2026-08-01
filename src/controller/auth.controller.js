@@ -6,11 +6,16 @@ const nodemailer = require("nodemailer");
 const AppError = require("../utils/utilsAppError");
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, // 465-port uchun SSL yoqiladi
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
+    // Railway-dagi IPv6 muammosini hal qiluvchi eng muhim qism:
+    family: 4, 
+    connectionTimeout: 10000,
 });
 
 // 1. LOGIN FUNKSIYASI
