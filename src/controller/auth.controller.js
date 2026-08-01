@@ -5,17 +5,16 @@ const redisClient = require("../redis/redis");
 const nodemailer = require("nodemailer");
 const AppError = require("../utils/utilsAppError");
 
-
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
         user: "jumanazarovogabek773@gmail.com",
-        pass: "cltb mcap ztwz lvzj",
+        pass: "itzhusyicpdjfise",
     },
 });
 
 // 1. LOGIN FUNKSIYASI
-const login = async (req, res,next) => {
+const login = async (req, res, next) => {
     const { email, password } = req.body;
     try {
         const userCheck = await pool.query(
@@ -23,56 +22,83 @@ const login = async (req, res,next) => {
             [email],
         );
         if (userCheck.rows.length === 0)
-          throw new AppError("Email yoki parol noto'g'ri.", 401);
+            throw new AppError("Email yoki parol noto'g'ri.", 401);
 
         const user = userCheck.rows[0];
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch)
-           throw new AppError("Email yoki parol noto'g'ri.", 401);
+        if (!isMatch) throw new AppError("Email yoki parol noto'g'ri.", 401);
 
-        const token = jwt.sign(
+        const accestoken = jwt.sign(
             {
                 id: user.id,
                 role: user.role,
             },
-            process.env.JWT_SECRET || "secret",
+            process.env.JWT_SECRET,
             {
-                expiresIn: "24h",
+                expiresIn: "15m",
             },
         );
+        const refreshToken = jwt.sign(
+            {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: process.env.JWT_EXPIRES_IN,
+            },
+        );
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
         res.status(200).json({
             message: "Muvaffaqiyatli tizimga kirildi.",
-            token,
+            accestoken,
             user: { email: user.email, role: user.role },
         });
     } catch (error) {
-        next(error)
+        next(error);
     }
 };
 
 // 2. REGISTER FUNKSIYASI
-const register = async (req, res,next) => {
-    const { email, password } = req.body;
+const register = async (req, res, next) => {
+    const { fullname, email, password } = req.body;
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
     if (!passwordRegex.test(password)) {
-        throw new AppError("Parol kamida 8 ta belgidan iborat bo'lishi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.",400)
+        throw new AppError(
+            "Parol kamida 8 ta belgidan iborat bo'lishi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.",
+            400,
+        );
     }
+
     try {
         const userCheck = await pool.query(
             "SELECT * FROM users WHERE email = $1",
             [email],
         );
-        if (userCheck.rows.length > 0)
-            throw new AppError("Email allaqachon mavjud.",409)
+
+        if (userCheck.rows.length > 0) {
+            throw new AppError("Email allaqachon mavjud.", 409);
+        }
 
         const verificationCode = Math.floor(
             100000 + Math.random() * 900000,
         ).toString();
+
         await redisClient.setEx(
             `register:${email}`,
             300,
-            JSON.stringify({ password, code: verificationCode }),
+            JSON.stringify({
+                fullname,
+                password,
+                code: verificationCode,
+            }),
         );
 
         await transporter.sendMail({
@@ -82,19 +108,22 @@ const register = async (req, res,next) => {
             html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
         });
 
-        res.status(200).json({ message: "Tasdiqlash kodi yuborildi!", email });
+        res.status(200).json({
+            message: "Tasdiqlash kodi yuborildi!",
+            email,
+        });
     } catch (error) {
-        next(error)
+        next(error);
     }
 };
-const verify = async (req, res,next) => {
+const verify = async (req, res, next) => {
     const { email, code } = req.body;
 
     try {
         const data = await redisClient.get(`register:${email}`);
 
         if (!data) {
-            throw new AppError("Amal qilish muddati tugagan.",401)
+            throw new AppError("Amal qilish muddati tugagan.", 401);
         }
 
         const parsedData = JSON.parse(data);
@@ -106,10 +135,10 @@ const verify = async (req, res,next) => {
         const hashedPassword = await bcrypt.hash(parsedData.password, 10);
 
         const user = await pool.query(
-            `INSERT INTO users (email, password, role, is_active)
-             VALUES ($1, $2, $3, $4)
-             RETURNING id, email, role`,
-            [email, hashedPassword, "USER", true],
+            `INSERT INTO users (fullname, email, password, role, is_active)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id, fullname, email, role`,
+            [parsedData.fullname, email, hashedPassword, "USER", true],
         );
 
         await redisClient.del(`register:${email}`);
@@ -131,18 +160,17 @@ const verify = async (req, res,next) => {
             user: user.rows[0],
         });
     } catch (error) {
-        next(error)
+        next(error);
     }
 };
-const resendOtp = async (req, res,next) => {
+const resendOtp = async (req, res, next) => {
     const { email } = req.body;
 
     try {
         const data = await redisClient.get(`register:${email}`);
 
         if (!data) {
-             throw new AppError("Avval ro'yxatdan o'ting.",400)
-            
+            throw new AppError("Avval ro'yxatdan o'ting.", 400);
         }
 
         const parsedData = JSON.parse(data);
@@ -171,10 +199,10 @@ const resendOtp = async (req, res,next) => {
             message: "Yangi tasdiqlash kodi yuborildi.",
         });
     } catch (error) {
-        next(error)
+        next(error);
     }
 };
-const forgotPassword = async (req, res,next) => {
+const forgotPassword = async (req, res, next) => {
     const { email } = req.body;
 
     try {
@@ -183,7 +211,7 @@ const forgotPassword = async (req, res,next) => {
         ]);
 
         if (user.rows.length === 0) {
-           throw new AppError("Bunday email mavjud emas.", 404);
+            throw new AppError("Bunday email mavjud emas.", 404);
         }
 
         const verificationCode = Math.floor(
@@ -204,15 +232,18 @@ const forgotPassword = async (req, res,next) => {
             message: "Parolni tiklash kodi yuborildi.",
         });
     } catch (error) {
-        next(error)
+        next(error);
     }
 };
-const resetPassword = async (req, res,next) => {
+const resetPassword = async (req, res, next) => {
     const { email, code, password } = req.body;
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
     if (!passwordRegex.test(password)) {
-        throw new AppError("Parol kamida 8 ta belgidan iborat bo'lishi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.",400)
+        throw new AppError(
+            "Parol kamida 8 ta belgidan iborat bo'lishi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.",
+            400,
+        );
     }
 
     try {
@@ -243,17 +274,61 @@ const resetPassword = async (req, res,next) => {
             message: "Parol muvaffaqiyatli yangilandi.",
         });
     } catch (error) {
-       next(error)
+        next(error);
     }
 };
-const logout = async (req, res,next) => {
+const logout = async (req, res, next) => {
     try {
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure: false,
+            sameSite: "strict",
+        });
+
         res.status(200).json({
             success: true,
             message: "Tizimdan muvaffaqiyatli chiqildi.",
         });
     } catch (error) {
-        next(error)
+        next(error);
+    }
+};
+const refreshToken = async (req, res, next) => {
+    try {
+        const token = req.cookies.refreshToken;
+
+        if (!token) {
+            throw new AppError("Refresh token topilmadi.", 401);
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const user = await pool.query(
+            "SELECT id, email, role FROM users WHERE id = $1",
+            [decoded.id],
+        );
+
+        if (user.rows.length === 0) {
+            throw new AppError("Foydalanuvchi topilmadi.", 404);
+        }
+
+        const accessToken = jwt.sign(
+            {
+                id: user.rows[0].id,
+                role: user.rows[0].role,
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "15m",
+            },
+        );
+
+        res.status(200).json({
+            success: true,
+            accessToken,
+        });
+    } catch (error) {
+        next(error);
     }
 };
 module.exports = {
@@ -264,4 +339,5 @@ module.exports = {
     forgotPassword,
     resetPassword,
     logout,
+    refreshToken,
 };

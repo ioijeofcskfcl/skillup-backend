@@ -8,6 +8,7 @@ const {
     forgotPassword,
     resetPassword,
     logout,
+    refreshToken,
 } = require("../controller/auth.controller");
 const validationMiddleware = require("../middleware/validation.middleware");
 
@@ -215,5 +216,18 @@ router.post(
  *         description: Tizimdan muvaffaqiyatli chiqildi
  */
 router.post("/logout", logout);
-
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Yangi access token olish
+ *     tags:
+ *       - Auth
+ *     responses:
+ *       200:
+ *         description: Yangi access token yaratildi
+ *       401:
+ *         description: Refresh token topilmadi yoki yaroqsiz
+ */
+router.post("/refresh", refreshToken);
 module.exports = router;
