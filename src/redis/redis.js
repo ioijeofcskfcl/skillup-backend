@@ -1,20 +1,19 @@
 const Redis = require("ioredis");
 
-// Railway yuborayotgan REDIS_URL ni o'qiymiz
+// Railway bergan REDIS_URL bo'lsa shuni oladi, bo'lmasa local-ga ulanadi
 const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
-
-console.log("📌 Ishlatilayotgan Redis URL:", redisUrl);
 
 const redis = new Redis(redisUrl, {
     maxRetriesPerRequest: null,
-    // Railway tarmoq muammolari uchun retry sozlamasi
-    retryStrategy(times) {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
-    },
+    enableReadyCheck: false,
 });
 
 redis.on("connect", () => console.log("✅ Redis Connected successfully!"));
 redis.on("error", (err) => console.error("❌ Redis Error:", err.message));
+
+// ioredis-da setEx yo'qligi uchun xavfsizlik chorasi:
+redis.setEx = function (key, ttl, value) {
+    return this.setex(key, ttl, value);
+};
 
 module.exports = redis;
