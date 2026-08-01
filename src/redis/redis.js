@@ -1,19 +1,9 @@
-const { createClient } = require("redis");
+const Redis = require("ioredis");
 
-console.log("REDIS_URL:", process.env.REDIS_URL);
+// Agar REDIS_URL bo'lsa shuni oladi, aks holda lokal localhost ga ulanadi
+const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
 
-const redisClient = createClient({
-    url: process.env.REDIS_URL,
-});
+redis.on("connect", () => console.log("✅ Redis Connected"));
+redis.on("error", (err) => console.error("❌ Redis Error:", err.message));
 
-redisClient.on("error", (err) => {
-    console.log("Redis Error:", err);
-});
-
-(async () => {
-    await redisClient.connect();
-    console.log("Redis Connected");
-})();
-console.log("REDIS_URL:", process.env.REDIS_URL);
-console.log("NODE_ENV:", process.env.NODE_ENV);
-module.exports = redisClient;
+module.exports = redis;

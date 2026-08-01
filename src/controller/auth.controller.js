@@ -91,7 +91,8 @@ const register = async (req, res, next) => {
             100000 + Math.random() * 900000,
         ).toString();
 
-        await redisClient.setEx(
+        // 🛠 ioredis mosligi uchun: setEx o'rniga setex qilindi
+        await redisClient.setex(
             `register:${email}`,
             300,
             JSON.stringify({
@@ -116,6 +117,8 @@ const register = async (req, res, next) => {
         next(error);
     }
 };
+
+// 3. VERIFY FUNKSIYASI
 const verify = async (req, res, next) => {
     const { email, code } = req.body;
 
@@ -163,6 +166,8 @@ const verify = async (req, res, next) => {
         next(error);
     }
 };
+
+// 4. RESEND OTP FUNKSIYASI
 const resendOtp = async (req, res, next) => {
     const { email } = req.body;
 
@@ -179,10 +184,12 @@ const resendOtp = async (req, res, next) => {
             100000 + Math.random() * 900000,
         ).toString();
 
-        await redisClient.setEx(
+        // 🛠 ioredis mosligi uchun: setEx o'rniga setex qilindi
+        await redisClient.setex(
             `register:${email}`,
             300,
             JSON.stringify({
+                fullname: parsedData.fullname,
                 password: parsedData.password,
                 code: verificationCode,
             }),
@@ -202,6 +209,8 @@ const resendOtp = async (req, res, next) => {
         next(error);
     }
 };
+
+// 5. FORGOT PASSWORD FUNKSIYASI
 const forgotPassword = async (req, res, next) => {
     const { email } = req.body;
 
@@ -218,7 +227,8 @@ const forgotPassword = async (req, res, next) => {
             100000 + Math.random() * 900000,
         ).toString();
 
-        await redisClient.setEx(`forgot:${email}`, 300, verificationCode);
+        // 🛠 ioredis mosligi uchun: setEx o'rniga setex qilindi
+        await redisClient.setex(`forgot:${email}`, 300, verificationCode);
 
         await transporter.sendMail({
             from: '"Skill Up" <jumanazarovogabek773@gmail.com>',
@@ -235,6 +245,8 @@ const forgotPassword = async (req, res, next) => {
         next(error);
     }
 };
+
+// 6. RESET PASSWORD FUNKSIYASI
 const resetPassword = async (req, res, next) => {
     const { email, code, password } = req.body;
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -277,6 +289,8 @@ const resetPassword = async (req, res, next) => {
         next(error);
     }
 };
+
+// 7. LOGOUT FUNKSIYASI
 const logout = async (req, res, next) => {
     try {
         res.clearCookie("refreshToken", {
@@ -293,6 +307,8 @@ const logout = async (req, res, next) => {
         next(error);
     }
 };
+
+// 8. REFRESH TOKEN FUNKSIYASI
 const refreshToken = async (req, res, next) => {
     try {
         const token = req.cookies.refreshToken;
@@ -331,6 +347,7 @@ const refreshToken = async (req, res, next) => {
         next(error);
     }
 };
+
 module.exports = {
     login,
     register,
