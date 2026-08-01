@@ -8,8 +8,8 @@ const AppError = require("../utils/utilsAppError");
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-        user: "jumanazarovogabek773@gmail.com",
-        pass: "itzhusyicpdjfise",
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     },
 });
 
