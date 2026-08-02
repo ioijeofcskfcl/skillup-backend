@@ -11,15 +11,7 @@ const transporter = nodemailer.createTransport({
         pass: "rhlccoaptvhlucue",
     },
 });
-transporter.verify((err, success) => {
-    if (err) {
-        console.error("SMTP ERROR:", err);
-    } else {
-        console.log("SMTP READY");
-    }
-});
-console.log("EMAIL_USER =", process.env.EMAIL_USER);
-console.log("EMAIL_PASS =", process.env.EMAIL_PASS ? "BOR" : "YO'Q");
+
 // 1. LOGIN FUNKSIYASI
 const login = async (req, res, next) => {
     const { email, password } = req.body;
