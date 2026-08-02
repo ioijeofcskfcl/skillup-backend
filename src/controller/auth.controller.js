@@ -12,7 +12,8 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS,
     },
 });
-
+console.log("EMAIL_USER =", process.env.EMAIL_USER);
+console.log("EMAIL_PASS =", process.env.EMAIL_PASS ? "BOR" : "YO'Q");
 // 1. LOGIN FUNKSIYASI
 const login = async (req, res, next) => {
     const { email, password } = req.body;
