@@ -4,24 +4,20 @@ const bcrypt = require("bcryptjs");
 const redisClient = require("../redis/redis");
 const nodemailer = require("nodemailer");
 const AppError = require("../utils/utilsAppError");
-
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
 });
 console.log("EMAIL_USER =", process.env.EMAIL_USER);
 console.log("EMAIL_PASS =", process.env.EMAIL_PASS ? "BOR" : "YO'Q");
-
-transporter.verify((err, success) => {
-    if (err) {
-        console.log("SMTP ERROR:", err);
-    } else {
-        console.log("SMTP Connected");
-    }
-});
 // 1. LOGIN FUNKSIYASI
 const login = async (req, res, next) => {
     const { email, password } = req.body;
@@ -129,31 +125,40 @@ const register = async (req, res, next) => {
 
 // 3. VERIFY FUNKSIYASI
 const verify = async (req, res, next) => {
-    const { email, code } = req.body;
+    console.log("1. VERIFY KELDI");
 
     try {
+        const { email, code } = req.body;
+        console.log("2.", email, code);
+
         const data = await redisClient.get(`register:${email}`);
+        console.log("3. REDIS:", data);
 
         if (!data) {
             throw new AppError("Amal qilish muddati tugagan.", 401);
         }
 
         const parsedData = JSON.parse(data);
+        console.log("4. PARSED");
 
         if (parsedData.code !== code) {
             throw new AppError("Tasdiqlash kodi noto'g'ri.", 400);
         }
 
         const hashedPassword = await bcrypt.hash(parsedData.password, 10);
+        console.log("5. HASH");
 
         const user = await pool.query(
-            `INSERT INTO users (fullname, email, password, role, is_active)
-             VALUES ($1, $2, $3, $4, $5)
-             RETURNING id, fullname, email, role`,
+            `INSERT INTO users(fullname,email,password,role,is_active)
+             VALUES($1,$2,$3,$4,$5)
+             RETURNING *`,
             [parsedData.fullname, email, hashedPassword, "USER", true],
         );
 
+        console.log("6. USER CREATED");
+
         await redisClient.del(`register:${email}`);
+        console.log("7. REDIS DELETE");
 
         const token = jwt.sign(
             {
@@ -166,16 +171,17 @@ const verify = async (req, res, next) => {
             },
         );
 
-        res.status(201).json({
-            message: "Ro'yxatdan o'tish muvaffaqiyatli.",
+        console.log("8. RESPONSE");
+
+        return res.status(201).json({
+            message: "OK",
             token,
-            user: user.rows[0],
         });
-    } catch (error) {
-        next(error);
+    } catch (err) {
+        console.log("VERIFY ERROR:", err);
+        next(err);
     }
 };
-
 // 4. RESEND OTP FUNKSIYASI
 const resendOtp = async (req, res, next) => {
     const { email } = req.body;
