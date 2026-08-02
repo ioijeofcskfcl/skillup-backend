@@ -100,7 +100,7 @@ const register = async (req, res, next) => {
                 code: verificationCode,
             }),
         );
-        // console.log("yuborildi");
+        console.log(verificationCode"yuborildi");
         // await transporter.sendMail({
         //     from: `"Skill Up" <jumanazarovogabek773@gmail.com>`,
         //     to: email,
