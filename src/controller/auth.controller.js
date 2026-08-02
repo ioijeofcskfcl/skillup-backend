@@ -5,11 +5,17 @@ const redisClient = require("../redis/redis");
 const nodemailer = require("nodemailer");
 const AppError = require("../utils/utilsAppError");
 
+// Railway va IPv4 uchun optimal transporter sozlamasi
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // 587-port uchun false
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
+    },
+    tls: {
+        rejectUnauthorized: false,
     },
 });
 
@@ -29,32 +35,24 @@ const login = async (req, res, next) => {
         if (!isMatch) throw new AppError("Email yoki parol noto'g'ri.", 401);
 
         const accestoken = jwt.sign(
-            {
-                id: user.id,
-                role: user.role,
-            },
+            { id: user.id, role: user.role },
             process.env.JWT_SECRET,
-            {
-                expiresIn: "15m",
-            },
+            { expiresIn: "15m" },
         );
+
         const refreshToken = jwt.sign(
-            {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-            },
+            { id: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
-            {
-                expiresIn: process.env.JWT_EXPIRES_IN,
-            },
+            { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
         );
+
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             secure: false,
             sameSite: "strict",
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
+
         res.status(200).json({
             message: "Muvaffaqiyatli tizimga kirildi.",
             accestoken,
@@ -71,9 +69,11 @@ const register = async (req, res, next) => {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
     if (!passwordRegex.test(password)) {
-        throw new AppError(
-            "Parol kamida 8 ta belgidan iborat bo'lishi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.",
-            400,
+        return next(
+            new AppError(
+                "Parol kamida 8 ta belgidan iborat bo'lishi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.",
+                400,
+            ),
         );
     }
 
@@ -91,17 +91,13 @@ const register = async (req, res, next) => {
             100000 + Math.random() * 900000,
         ).toString();
 
-        // 🛠 ioredis mosligi uchun: setEx o'rniga setex qilindi
-        // register funksiyangiz ichida:
-
-        // 1. PostgreSQL va Redis amallari bajariladi...
         await redisClient.setex(
             `register:${email}`,
             300,
             JSON.stringify({ fullname, password, code: verificationCode }),
         );
 
-        // 2. Email yuborishni await qilmasdan fon rejimiga o'tkazamiz
+        // Fonda (async) yuborish: res javobini ushlab turmaydi
         transporter
             .sendMail({
                 from: `"Skill Up" <${process.env.EMAIL_USER}>`,
@@ -109,11 +105,11 @@ const register = async (req, res, next) => {
                 subject: "Skill Up — Tasdiqlash kodi",
                 html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
             })
+            .then(() => console.log("✅ Register kodi ketdi:", email))
             .catch((err) =>
-                console.error("❌ Email yuborishda fonda xato:", err.message),
+                console.error("❌ Register email xatosi:", err.message),
             );
 
-        // 3. Foydalanuvchiga DARHOL javob qaytaramiz!
         return res.status(200).json({
             message: "Tasdiqlash kodi emailga yuborildi!",
             email,
@@ -152,14 +148,9 @@ const verify = async (req, res, next) => {
         await redisClient.del(`register:${email}`);
 
         const token = jwt.sign(
-            {
-                userId: user.rows[0].id,
-                role: user.rows[0].role,
-            },
+            { userId: user.rows[0].id, role: user.rows[0].role },
             process.env.JWT_SECRET,
-            {
-                expiresIn: "24h",
-            },
+            { expiresIn: "24h" },
         );
 
         res.status(201).json({
@@ -189,7 +180,6 @@ const resendOtp = async (req, res, next) => {
             100000 + Math.random() * 900000,
         ).toString();
 
-        // 🛠 ioredis mosligi uchun: setEx o'rniga setex qilindi
         await redisClient.setex(
             `register:${email}`,
             300,
@@ -200,12 +190,16 @@ const resendOtp = async (req, res, next) => {
             }),
         );
 
-        await transporter.sendMail({
-            from: '"Skill Up" <jumanazarovogabek773@gmail.com>',
-            to: email,
-            subject: "Skill Up — Yangi tasdiqlash kodi",
-            html: `<h3>Sizning yangi kodingiz: ${verificationCode}</h3>`,
-        });
+        transporter
+            .sendMail({
+                from: `"Skill Up" <${process.env.EMAIL_USER}>`,
+                to: email,
+                subject: "Skill Up — Yangi tasdiqlash kodi",
+                html: `<h3>Sizning yangi kodingiz: ${verificationCode}</h3>`,
+            })
+            .catch((err) =>
+                console.error("❌ Resend OTP email xatosi:", err.message),
+            );
 
         res.status(200).json({
             message: "Yangi tasdiqlash kodi yuborildi.",
@@ -232,15 +226,18 @@ const forgotPassword = async (req, res, next) => {
             100000 + Math.random() * 900000,
         ).toString();
 
-        // 🛠 ioredis mosligi uchun: setEx o'rniga setex qilindi
         await redisClient.setex(`forgot:${email}`, 300, verificationCode);
 
-        await transporter.sendMail({
-            from: '"Skill Up" <jumanazarovogabek773@gmail.com>',
-            to: email,
-            subject: "Skill Up - Parolni tiklash",
-            html: `<h2>Parolni tiklash kodingiz: ${verificationCode}</h2>`,
-        });
+        transporter
+            .sendMail({
+                from: `"Skill Up" <${process.env.EMAIL_USER}>`,
+                to: email,
+                subject: "Skill Up - Parolni tiklash",
+                html: `<h2>Parolni tiklash kodingiz: ${verificationCode}</h2>`,
+            })
+            .catch((err) =>
+                console.error("❌ Forgot password email xatosi:", err.message),
+            );
 
         res.status(200).json({
             success: true,
@@ -257,9 +254,11 @@ const resetPassword = async (req, res, next) => {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
     if (!passwordRegex.test(password)) {
-        throw new AppError(
-            "Parol kamida 8 ta belgidan iborat bo'lishi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.",
-            400,
+        return next(
+            new AppError(
+                "Parol kamida 8 ta belgidan iborat bo'lishi, 1 ta katta harf, 1 ta kichik harf va 1 ta raqam qatnashishi kerak.",
+                400,
+            ),
         );
     }
 
@@ -334,14 +333,9 @@ const refreshToken = async (req, res, next) => {
         }
 
         const accessToken = jwt.sign(
-            {
-                id: user.rows[0].id,
-                role: user.rows[0].role,
-            },
+            { id: user.rows[0].id, role: user.rows[0].role },
             process.env.JWT_SECRET,
-            {
-                expiresIn: "15m",
-            },
+            { expiresIn: "15m" },
         );
 
         res.status(200).json({
