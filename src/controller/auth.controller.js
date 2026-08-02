@@ -6,8 +6,9 @@ const nodemailer = require("nodemailer");
 const AppError = require("../utils/utilsAppError");
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 465,
+    port: 587,
     secure: true,
+    ffamily: 4,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
