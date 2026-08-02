@@ -10,8 +10,8 @@ const transporter = nodemailer.createTransport({
     secure: false,
     family: 4,
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: "jumanazarovogabek773@gmail.com",
+        pass: "itzhusyicpdjfise",
     },
     tls: {
         rejectUnauthorized: false,
@@ -114,14 +114,14 @@ const register = async (req, res, next) => {
                 code: verificationCode,
             }),
         );
-        // console.log("sendMail")
+        console.log("sendMail")
         
-        // await transporter.sendMail({
-        //     from: `"Skill Up" <${process.env.EMAIL_USER}>`,
-        //     to: email,
-        //     subject: "Skill Up — Tasdiqlash kodi",
-        //     html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
-        // });
+        await transporter.sendMail({
+            from: `"Skill Up" <jumanazarovogabek773@gmail.com>`,
+            to: email,
+            subject: "Skill Up — Tasdiqlash kodi",
+            html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
+        });
 
         console.log("Email yuborildi:", info.messageId);
 
