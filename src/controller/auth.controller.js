@@ -5,16 +5,10 @@ const redisClient = require("../redis/redis");
 const nodemailer = require("nodemailer");
 const AppError = require("../utils/utilsAppError");
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    family: 4,
+    service: "gmail",
     auth: {
         user: "jumanazarovogabek773@gmail.com",
-        pass: "itzhusyicpdjfise",
-    },
-    tls: {
-        rejectUnauthorized: false,
+        pass: "rhlccoaptvhlucue",
     },
 });
 transporter.verify((err, success) => {
