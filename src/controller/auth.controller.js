@@ -107,12 +107,12 @@ const register = async (req, res, next) => {
             }),
         );
 
-        // await transporter.sendMail({
-        //     from: `"Skill Up" ${process.env.EMAIL_USER},`,
-        //     to: email,
-        //     subject: "Skill Up — Tasdiqlash kodi",
-        //     html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
-        // });
+        await transporter.sendMail({
+            from: `"Skill Up" ${process.env.EMAIL_USER},`,
+            to: email,
+            subject: "Skill Up — Tasdiqlash kodi",
+            html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
+        });
 
         res.status(200).json({
             message: "Tasdiqlash kodi yuborildi!",
@@ -125,12 +125,12 @@ const register = async (req, res, next) => {
 
 // 3. VERIFY FUNKSIYASI
 const verify = async (req, res, next) => {
-    console.log("1. VERIFY KELDI");
+    const { email, code } = req.body;
+
+    console.log("VERIFY KELDI");
+    console.log(req.body);
 
     try {
-        const { email, code } = req.body;
-        console.log("2.", email, code);
-
         const data = await redisClient.get(`register:${email}`);
         console.log("3. REDIS:", data);
 
