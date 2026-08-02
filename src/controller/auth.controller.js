@@ -5,8 +5,6 @@ const redisClient = require("../redis/redis");
 const nodemailer = require("nodemailer");
 const AppError = require("../utils/utilsAppError");
 
-const nodemailer = require("nodemailer");
-
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
