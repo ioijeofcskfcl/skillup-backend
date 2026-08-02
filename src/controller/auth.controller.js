@@ -114,16 +114,13 @@ const register = async (req, res, next) => {
                 code: verificationCode,
             }),
         );
-        console.log("sendMail")
-        
+
         await transporter.sendMail({
             from: `"Skill Up" <jumanazarovogabek773@gmail.com>`,
             to: email,
             subject: "Skill Up — Tasdiqlash kodi",
             html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
         });
-
-        console.log("Email yuborildi:", info.messageId);
 
         res.status(200).json({
             message: "Tasdiqlash kodi yuborildi!",
