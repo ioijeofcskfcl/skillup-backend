@@ -7,15 +7,15 @@ const AppError = require("../utils/utilsAppError");
 
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    port: 587, // 465 o'rniga 587 port ishlatamiz
+    secure: false, // 587 port uchun false bo'ladi (STARTTLS)
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
-    // IPv6 xatosini hal qiluvchi kalit sozlama:
-    family: 4,
-    connectionTimeout: 10000,
+    tls: {
+        rejectUnauthorized: false, // Bulutli server sertifikat tekshiruvida to'xtab qolmasligi uchun
+    },
 });
 
 // 1. LOGIN FUNKSIYASI
