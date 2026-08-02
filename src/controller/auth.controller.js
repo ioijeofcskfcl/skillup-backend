@@ -13,9 +13,9 @@ const transporter = nodemailer.createTransport({
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
+    tls: {
+        rejectUnauthorized: false,
+    },
 });
 transporter.verify((err, success) => {
     if (err) {
@@ -115,19 +115,16 @@ const register = async (req, res, next) => {
             }),
         );
 
-        try {
-            const info = await transporter.sendMail({
-                from: `"Skill Up" <${process.env.EMAIL_USER}>`,
-                to: email,
-                subject: "Skill Up — Tasdiqlash kodi",
-                html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
-            });
+        console.log("Email yuborilmoqda...");
 
-            console.log("Email yuborildi:", info.messageId);
-        } catch (err) {
-            console.error("EMAIL ERROR:", err);
-            throw err;
-        }
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "Test",
+            text: "Hello",
+        });
+
+        console.log("Email yuborildi");
 
         res.status(200).json({
             message: "Tasdiqlash kodi yuborildi!",
