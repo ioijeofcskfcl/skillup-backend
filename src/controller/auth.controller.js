@@ -5,16 +5,21 @@ const redisClient = require("../redis/redis");
 const nodemailer = require("nodemailer");
 const AppError = require("../utils/utilsAppError");
 
+const nodemailer = require("nodemailer");
+
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587, // 465 o'rniga 587 port ishlatamiz
-    secure: false, // 587 port uchun false bo'ladi (STARTTLS)
+    // smtp.gmail.com o'rniga to'g'ridan-to'g'ri Gmail IPv4 IP manzili ishlatiladi
+    host: "64.233.184.108",
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
     tls: {
-        rejectUnauthorized: false, // Bulutli server sertifikat tekshiruvida to'xtab qolmasligi uchun
+        // IP manzil ishlatilgani sababli TLS host sertifikatini tekshirishni o'chiramiz
+        rejectUnauthorized: false,
+        servername: "smtp.gmail.com",
     },
 });
 
