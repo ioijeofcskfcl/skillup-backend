@@ -107,12 +107,19 @@ const register = async (req, res, next) => {
             }),
         );
 
-        await transporter.sendMail({
-            from: `"Skill Up" ${process.env.EMAIL_USER},`,
-            to: email,
-            subject: "Skill Up — Tasdiqlash kodi",
-            html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
-        });
+        try {
+            const info = await transporter.sendMail({
+                from: `"Skill Up" <${process.env.EMAIL_USER}>`,
+                to: email,
+                subject: "Skill Up — Tasdiqlash kodi",
+                html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
+            });
+
+            console.log("Email yuborildi:", info.messageId);
+        } catch (err) {
+            console.error("EMAIL ERROR:", err);
+            throw err;
+        }
 
         res.status(200).json({
             message: "Tasdiqlash kodi yuborildi!",
