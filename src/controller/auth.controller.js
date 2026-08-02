@@ -108,7 +108,7 @@ const register = async (req, res, next) => {
         );
 
         await transporter.sendMail({
-            from: '"Skill Up" <jumanazarovogabek773@gmail.com>',
+            from: `"Skill Up" ${process.env.EMAIL_USER},`,
             to: email,
             subject: "Skill Up — Tasdiqlash kodi",
             html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
