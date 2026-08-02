@@ -7,15 +7,10 @@ const AppError = require("../utils/utilsAppError");
 
 // Railway va IPv4 uchun optimal transporter sozlamasi
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // 587-port uchun false
+    service: "gmail",
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
-    },
-    tls: {
-        rejectUnauthorized: false,
     },
 });
 
@@ -97,7 +92,6 @@ const register = async (req, res, next) => {
             JSON.stringify({ fullname, password, code: verificationCode }),
         );
 
-        // Fonda (async) yuborish: res javobini ushlab turmaydi
         transporter
             .sendMail({
                 from: `"Skill Up" <${process.env.EMAIL_USER}>`,
@@ -105,10 +99,12 @@ const register = async (req, res, next) => {
                 subject: "Skill Up — Tasdiqlash kodi",
                 html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
             })
-            .then(() => console.log("✅ Register kodi ketdi:", email))
-            .catch((err) =>
-                console.error("❌ Register email xatosi:", err.message),
-            );
+            .then((info) => {
+                console.log(
+                    "✅ EMAIL MUVAFFAQIYATLI KETDI! ID:",
+                    info.messageId,
+                );
+            });
 
         return res.status(200).json({
             message: "Tasdiqlash kodi emailga yuborildi!",
