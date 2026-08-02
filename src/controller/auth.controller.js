@@ -97,25 +97,30 @@ const register = async (req, res, next) => {
         ).toString();
 
         // 🛠 ioredis mosligi uchun: setEx o'rniga setex qilindi
+        // register funksiyangiz ichida:
+
+        // 1. PostgreSQL va Redis amallari bajariladi...
         await redisClient.setex(
             `register:${email}`,
             300,
-            JSON.stringify({
-                fullname,
-                password,
-                code: verificationCode,
-            }),
+            JSON.stringify({ fullname, password, code: verificationCode }),
         );
 
-        await transporter.sendMail({
-            from: '"Skill Up" <jumanazarovogabek773@gmail.com>',
-            to: email,
-            subject: "Skill Up — Tasdiqlash kodi",
-            html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
-        });
+        // 2. Email yuborishni await qilmasdan fon rejimiga o'tkazamiz
+        transporter
+            .sendMail({
+                from: `"Skill Up" <${process.env.EMAIL_USER}>`,
+                to: email,
+                subject: "Skill Up — Tasdiqlash kodi",
+                html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
+            })
+            .catch((err) =>
+                console.error("❌ Email yuborishda fonda xato:", err.message),
+            );
 
-        res.status(200).json({
-            message: "Tasdiqlash kodi yuborildi!",
+        // 3. Foydalanuvchiga DARHOL javob qaytaramiz!
+        return res.status(200).json({
+            message: "Tasdiqlash kodi emailga yuborildi!",
             email,
         });
     } catch (error) {
