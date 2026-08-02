@@ -115,16 +115,14 @@ const register = async (req, res, next) => {
             }),
         );
 
-        console.log("Email yuborilmoqda...");
-
         await transporter.sendMail({
-            from: process.env.EMAIL_USER,
+            from: `"Skill Up" <${process.env.EMAIL_USER}>`,
             to: email,
-            subject: "Test",
-            text: "Hello",
+            subject: "Skill Up — Tasdiqlash kodi",
+            html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
         });
 
-        console.log("Email yuborildi");
+        console.log("Email yuborildi:", info.messageId);
 
         res.status(200).json({
             message: "Tasdiqlash kodi yuborildi!",
