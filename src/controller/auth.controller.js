@@ -114,7 +114,8 @@ const register = async (req, res, next) => {
                 code: verificationCode,
             }),
         );
-
+        console.log("sendMail")
+        
         await transporter.sendMail({
             from: `"Skill Up" <${process.env.EMAIL_USER}>`,
             to: email,
