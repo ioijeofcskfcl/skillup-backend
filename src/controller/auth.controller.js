@@ -8,18 +8,10 @@ const AppError = require("../utils/utilsAppError");
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-    // smtp.gmail.com o'rniga to'g'ridan-to'g'ri Gmail IPv4 IP manzili ishlatiladi
-    host: "64.233.184.108",
-    port: 465,
-    secure: true,
+    service: "gmail",
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
-    },
-    tls: {
-        // IP manzil ishlatilgani sababli TLS host sertifikatini tekshirishni o'chiramiz
-        rejectUnauthorized: false,
-        servername: "smtp.gmail.com",
     },
 });
 
