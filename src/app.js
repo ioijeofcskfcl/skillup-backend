@@ -14,8 +14,12 @@ const dashboardRoutes = require("./routes/dashboard.routes");
 const errorMiddleware = require("./middleware/error.middleware");
 const cors = require("cors");
 const loggerMiddleware = require("./middleware/logger.middleware");
+const cookieParser = require("cookie-parser");
+
 
 app.use(express.json());
+app.use(cookieParser());
+
 app.use((req, res, next) => {
     console.log("REQUEST:", req.method, req.originalUrl);
     next();
@@ -37,6 +41,7 @@ app.use("/api/videos", videoRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+
 
 app.use(errorMiddleware);
 
