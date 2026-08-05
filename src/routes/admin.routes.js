@@ -38,7 +38,7 @@ const roleMiddleware = require("../middleware/role.middleware");
  *       201:
  *         description: Admin muvaffaqiyatli yaratildi
  */
-router.post("/", authMiddleware, createAdmin);
+router.post("/", authMiddleware,roleMiddleware("SUPER_ADMIN"), createAdmin);
 /**
  * @swagger
  * /api/admins:
