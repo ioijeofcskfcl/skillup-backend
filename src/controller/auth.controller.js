@@ -100,20 +100,21 @@ const register = async (req, res, next) => {
                 code: verificationCode,
             }),
         );
-        console.log("yuborildi");
-        try {
-            const info = await transporter.sendMail({
-                 from: '"Skill Up" <jumanazarovogabek773@gmail.com>',
-                 to: email,
-                 subject: "Skill Up — Tasdiqlash kodi",
-                 html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
-             });
+        console.log(verificationCode, "KOD YUBORILDI");
+        
+        // try {
+        //     const info = await transporter.sendMail({
+        //          from: '"Skill Up" <jumanazarovogabek773@gmail.com>',
+        //          to: email,
+        //          subject: "Skill Up — Tasdiqlash kodi",
+        //          html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
+        //      });
 
-            console.log("Email yuborildi:", info);
-         } catch (err) {
-             console.error("SMTP ERROR:", err);
-             throw err;
-         }
+        //     console.log("Email yuborildi:", info);
+        //  } catch (err) {
+        //      console.error("SMTP ERROR:", err);
+        //      throw err;
+        //  }
 
         res.status(200).json({
             message: "Tasdiqlash kodi yuborildi!",
