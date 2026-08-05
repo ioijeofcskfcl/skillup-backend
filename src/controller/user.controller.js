@@ -52,8 +52,48 @@ const getProfile = async (req, res, next) => {
         next(error);
     }
 };
+const updateProfile = async (req, res, next) => {
+    try {
+        const profile = await userService.updateProfile(req.user.id, req.body);
+
+        return res.status(200).json({
+            success: true,
+            message: "Profil muvaffaqiyatli yangilandi",
+            data: profile,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+const changePassword = async (req, res, next) => {
+    try {
+        await userService.changePassword(req.user.id, req.body);
+
+        return res.status(200).json({
+            success: true,
+            message: "Parol muvaffaqiyatli yangilandi.",
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+const getMyCourses = async (req, res, next) => {
+    try {
+        const courses = await userService.getMyCourses(req.user.id);
+
+        return res.status(200).json({
+            success: true,
+            data: courses,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 module.exports = {
     getAllUsers,
     getUserById,
     getProfile,
+    updateProfile,
+    changePassword,
+    getMyCourses,
 };

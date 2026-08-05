@@ -5,10 +5,18 @@ const {
     getAllUsers,
     getUserById,
     getProfile,
+    updateProfile,
+    changePassword,
+    getMyCourses,
 } = require("../controller/user.controller");
 
 const authMiddleware = require("../middleware/auth.middleware");
 const roleMiddleware = require("../middleware/role.middleware");
+const validationMiddleware = require("../middleware/validation.middleware");
+const {
+    updateProfileSchema,
+    changePasswordSchema,
+} = require("../validations/user.validation");
 /**
  * @swagger
  * /api/users/profile:
@@ -82,6 +90,22 @@ router.get(
 );
 /**
  * @swagger
+ * /api/users/my-courses:
+ *   get:
+ *     summary: Foydalanuvchining sotib olgan kurslari
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Kurslar muvaffaqiyatli olindi
+ *       401:
+ *         description: Token noto'g'ri
+ */
+router.get("/my-courses", authMiddleware, getMyCourses);
+/**
+ * @swagger
  * /api/users/{id}:
  *   get:
  *     summary: ID bo'yicha foydalanuvchini olish
@@ -106,6 +130,88 @@ router.get(
     authMiddleware,
     roleMiddleware("ADMIN", "SUPER_ADMIN"),
     getUserById,
+);
+/**
+ * @swagger
+ * /api/users/profile:
+ *   put:
+ *     summary: O'z profilini yangilash
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - fullname
+ *               - email
+ *             properties:
+ *               fullname:
+ *                 type: string
+ *                 example: Ogabek Jumanazarov
+ *               email:
+ *                 type: string
+ *                 example: ogabek@gmail.com
+ *     responses:
+ *       200:
+ *         description: Profil muvaffaqiyatli yangilandi
+ *       401:
+ *         description: Token noto'g'ri
+ *       409:
+ *         description: Email band
+ */
+router.put(
+    "/profile",
+    authMiddleware,
+    validationMiddleware(updateProfileSchema),
+    updateProfile,
+);
+/**
+ * @swagger
+ * /api/users/change-password:
+ *   put:
+ *     summary: Parolni o'zgartirish
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - oldPassword
+ *               - newPassword
+ *               - confirmPassword
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *                 example: Ogabek123$
+ *               newPassword:
+ *                 type: string
+ *                 example: Ogabek456$
+ *               confirmPassword:
+ *                 type: string
+ *                 example: Ogabek456$
+ *     responses:
+ *       200:
+ *         description: Parol muvaffaqiyatli yangilandi
+ *       400:
+ *         description: Eski parol noto'g'ri yoki yangi parollar mos emas
+ *       401:
+ *         description: Token noto'g'ri
+ */
+router.put(
+    "/change-password",
+    authMiddleware,
+    validationMiddleware(changePasswordSchema),
+    changePassword,
 );
 
 module.exports = router;
