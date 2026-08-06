@@ -213,11 +213,45 @@ const deleteCourse = async (id) => {
 
     await pool.query("DELETE FROM courses WHERE id = $1", [id]);
 };
+const getCourseVideos = async (courseId, userId) => {
+    const course = await pool.query(
+        `
+        SELECT id
+        FROM courses
+        WHERE id = $1
+        `,
+        [courseId],
+    );
 
+    if (!course.rows.length) {
+        throw new AppError("Kurs topilmadi.", 404);
+    }
+
+    const result = await pool.query(
+        `
+        SELECT
+            v.id,
+            v.title,
+            v.video_url,
+            v.duration,
+            COALESCE(p.is_watched, FALSE) AS is_watched
+        FROM videos v
+        LEFT JOIN progress p
+            ON p.video_id = v.id
+            AND p.user_id = $2
+        WHERE v.course_id = $1
+        ORDER BY v.created_at ASC
+        `,
+        [courseId, userId],
+    );
+
+    return result.rows;
+};
 module.exports = {
     createCourse,
     getAllCourses,
     getCourseById,
     updateCourse,
     deleteCourse,
+    getCourseVideos,
 };

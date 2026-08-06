@@ -80,11 +80,26 @@ const deleteCourse = async (req, res, next) => {
         next(error);
     }
 };
+const getCourseVideos = async (req, res, next) => {
+    try {
+        const videos = await courseService.getCourseVideos(
+            req.params.id,
+            req.user.id,
+        );
 
+        return res.status(200).json({
+            success: true,
+            data: videos,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 module.exports = {
     createCourse,
     getAllCourses,
     getCourseById,
     updateCourse,
     deleteCourse,
+    getCourseVideos
 };

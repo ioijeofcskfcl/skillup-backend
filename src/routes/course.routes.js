@@ -7,6 +7,7 @@ const {
     getCourseById,
     updateCourse,
     deleteCourse,
+    getCourseVideos
 } = require("../controller/course.controller");
 const validationMiddleware = require("../middleware/validation.middleware");
 
@@ -219,6 +220,34 @@ router.delete(
     authMiddleware,
     roleMiddleware("ADMIN"),
     deleteCourse
+);
+/**
+ * @swagger
+ * /api/courses/{id}/videos:
+ *   get:
+ *     summary: Kurs videolarini olish
+ *     tags:
+ *       - Course
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Kurs videolari
+ *       403:
+ *         description: Siz ushbu kursni sotib olmagansiz
+ *       404:
+ *         description: Kurs topilmadi
+ */
+router.get(
+    "/:id/videos",
+    authMiddleware,
+    getCourseVideos,
 );
 
 module.exports = router;
