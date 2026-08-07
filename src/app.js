@@ -11,6 +11,8 @@ const paymentRoutes = require("./routes/payment.routes");
 const categoryRoutes = require("./routes/category.routes");
 const userRoutes = require("./routes/user.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
+const progressRoutes = require("./routes/progress.routes");
+const certificateRoutes = require("./routes/certificate.routes");
 const errorMiddleware = require("./middleware/error.middleware");
 const cors = require("cors");
 const loggerMiddleware = require("./middleware/logger.middleware");
@@ -41,6 +43,8 @@ app.use("/api/videos", videoRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/progress", progressRoutes);
+app.use("/api/certificates", certificateRoutes);
 
 
 app.use(errorMiddleware);
