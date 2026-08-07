@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const redisClient = require("../redis/redis");
 const nodemailer = require("nodemailer");
+const axios = require("axios");
 const AppError = require("../utils/utilsAppError");
 
 
@@ -110,24 +111,46 @@ const register = async (req, res, next) => {
         
         
         
-            try {
-    console.log("1. SMTP sendMail boshladi");
+           try {
+    console.log("1. Brevo API email yuborishni boshladi");
 
-    const info = await transporter.sendMail({
-        from: `"Skill Up" <${process.env.SMTP_USER}>`,
-        to: email,
-        subject: "Skill Up — Tasdiqlash kodi",
-        html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
-    });
+    const response = await axios.post(
+        "https://api.brevo.com/v3/smtp/email",
+        {
+            sender: {
+                name: "Skill Up",
+                email: process.env.EMAIL_USER,
+            },
+            to: [
+                {
+                    email: email,
+                },
+            ],
+            subject: "Skill Up — Tasdiqlash kodi",
+            htmlContent: `
+                <h3>Sizning tasdiqlash kodingiz: ${verificationCode}</h3>
+            `,
+        },
+        {
+            headers: {
+                accept: "application/json",
+                "api-key": process.env.BREVO_API_KEY,
+                "content-type": "application/json",
+            },
+        }
+    );
 
-    console.log("2. SMTP sendMail tugadi");
-    console.log("messageId:", info.messageId);
-    console.log("response:", info.response);
+    console.log("2. Brevo email yuborildi");
+    console.log("messageId:", response.data.messageId);
 
 } catch (error) {
-    console.error("❌ SMTP ERROR:", error);
+    console.error(
+        "❌ BREVO ERROR:",
+        error.response?.data || error.message
+    );
+
     throw error;
-};
+}
 
              
           
