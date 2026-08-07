@@ -42,10 +42,10 @@ const {
  *               email:
  *                 type: string
  *                 format: email
- *                 example: "ogabek@gmail.com"
+ *                 example: "jumanazarovogabek773@gmail.com"
  *               password:
  *                 type: string
- *                 example: "Ogabek123"
+ *                 example: "Ogabek123$"
  *     responses:
  *       200:
  *         description: Tasdiqlash kodi emailga yuborildi

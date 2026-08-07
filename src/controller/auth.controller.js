@@ -4,11 +4,15 @@ const bcrypt = require("bcryptjs");
 const redisClient = require("../redis/redis");
 const nodemailer = require("nodemailer");
 const AppError = require("../utils/utilsAppError");
+
+
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: false, // 587 port uchun
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
     },
 });
 
@@ -101,16 +105,16 @@ const register = async (req, res, next) => {
             }),
         );
         
-        console.log("1. sendMail boshlanishidan oldin");
+        
         
              const info = await transporter.sendMail({
-                  from: '"Skill Up" <jumanazarovogabek773@gmail.com>',
+                  from: `"Skill Up" <${process.env.SMTP_USER}>`,
                  to: email,
                   subject: "Skill Up — Tasdiqlash kodi",
                   html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
               });
 
-             console.log("Email yuborildi:", info);
+             
           
           
 console.log(verificationCode, "KOD YUBORILDI");
