@@ -9,11 +9,14 @@ const AppError = require("../utils/utilsAppError");
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT),
-    secure: false, // 587 port uchun
+    secure: false,
     auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        pass: process.env.SMTP_PASSWORD,
     },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
 });
 
 // 1. LOGIN FUNKSIYASI
@@ -107,12 +110,24 @@ const register = async (req, res, next) => {
         
         
         
-             const info = await transporter.sendMail({
-                  from: `"Skill Up" <jumanazarovogabek773@gmail.com>`,
-                 to: email,
-                  subject: "Skill Up — Tasdiqlash kodi",
-                  html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
-              });
+            try {
+    console.log("1. SMTP sendMail boshladi");
+
+    const info = await transporter.sendMail({
+        from: `"Skill Up" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: "Skill Up — Tasdiqlash kodi",
+        html: `<h3>Sizning kodingiz: ${verificationCode}</h3>`,
+    });
+
+    console.log("2. SMTP sendMail tugadi");
+    console.log("messageId:", info.messageId);
+    console.log("response:", info.response);
+
+} catch (error) {
+    console.error("❌ SMTP ERROR:", error);
+    throw error;
+};
 
              
           
