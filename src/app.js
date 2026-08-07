@@ -13,6 +13,11 @@ const userRoutes = require("./routes/user.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const progressRoutes = require("./routes/progress.routes");
 const certificateRoutes = require("./routes/certificate.routes");
+const postRoutes = require("./routes/post.routes");
+const quizRoutes = require("./routes/quiz.routes");
+const pricingRoutes = require("./routes/pricing.routes");
+const mentorRoutes = require("./routes/mentor.routes");
+
 const errorMiddleware = require("./middleware/error.middleware");
 const cors = require("cors");
 const loggerMiddleware = require("./middleware/logger.middleware");
@@ -45,6 +50,10 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/certificates", certificateRoutes);
+app.use("/api/posts", postRoutes);
+app.use("/api/quizzes", quizRoutes);
+app.use("/api/pricing", pricingRoutes);
+app.use("/api/mentors", mentorRoutes);
 
 
 app.use(errorMiddleware);
