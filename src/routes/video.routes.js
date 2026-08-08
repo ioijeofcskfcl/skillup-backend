@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
+
 const upload = require("../middleware/upload");
+
 const {
     createVideo,
     getAllVideos,
@@ -9,6 +11,7 @@ const {
     deleteVideo,
     getVideosByCourse,
 } = require("../controller/video.controller");
+
 const validationMiddleware = require("../middleware/validation.middleware");
 
 const {
@@ -37,6 +40,8 @@ const roleMiddleware = require("../middleware/role.middleware");
  *             required:
  *               - course_id
  *               - title
+ *               - duration
+ *               - order_number
  *               - video
  *             properties:
  *               course_id:
@@ -61,15 +66,18 @@ const roleMiddleware = require("../middleware/role.middleware");
  *         description: Noto'g'ri ma'lumot
  *       401:
  *         description: Token mavjud emas yoki noto'g'ri
+ *       415:
+ *         description: Video fayl formati noto'g'ri
  */
 router.post(
     "/",
     authMiddleware,
     roleMiddleware("ADMIN"),
     upload.single("video"),
-    createVideo,
     validationMiddleware(createVideoSchema),
+    createVideo
 );
+
 /**
  * @swagger
  * /api/videos:
@@ -79,40 +87,9 @@ router.post(
  *       - Video
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         required: false
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Sahifa raqami
- *       - in: query
- *         name: limit
- *         required: false
- *         schema:
- *           type: integer
- *           default: 10
- *         description: Har bir sahifadagi videolar soni
- *       - in: query
- *         name: course_id
- *         required: false
- *         schema:
- *           type: string
- *         description: Kurs ID bo'yicha filter
- *       - in: query
- *         name: search
- *         required: false
- *         schema:
- *           type: string
- *         description: Video nomi bo'yicha qidirish
- *     responses:
- *       200:
- *         description: Videolar ro'yxati muvaffaqiyatli olindi
- *       401:
- *         description: Token mavjud emas yoki noto'g'ri
  */
 router.get("/", authMiddleware, getAllVideos);
+
 /**
  * @swagger
  * /api/videos/course/{courseId}:
@@ -122,19 +99,12 @@ router.get("/", authMiddleware, getAllVideos);
  *       - Video
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: courseId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Kurs videolari muvaffaqiyatli olindi
- *       404:
- *         description: Kurs topilmadi
  */
-router.get("/course/:courseId", authMiddleware, getVideosByCourse);
+router.get(
+    "/course/:courseId",
+    authMiddleware,
+    getVideosByCourse
+);
 
 /**
  * @swagger
@@ -145,17 +115,6 @@ router.get("/course/:courseId", authMiddleware, getVideosByCourse);
  *       - Video
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Video topildi
- *       404:
- *         description: Video topilmadi
  */
 router.get("/:id", authMiddleware, getVideoById);
 
@@ -168,34 +127,13 @@ router.get("/:id", authMiddleware, getVideoById);
  *       - Video
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               course_id:
- *                 type: string
- *               title:
- *                 type: string
- *               video_url:
- *                 type: string
- *               duration:
- *                 type: integer
- *               order_number:
- *                 type: integer
- *     responses:
- *       200:
- *         description: Video muvaffaqiyatli yangilandi
  */
-router.put("/:id", authMiddleware, roleMiddleware("ADMIN"), updateVideo);
+router.put(
+    "/:id",
+    authMiddleware,
+    roleMiddleware("ADMIN"),
+    updateVideo
+);
 
 /**
  * @swagger
@@ -206,18 +144,12 @@ router.put("/:id", authMiddleware, roleMiddleware("ADMIN"), updateVideo);
  *       - Video
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Video muvaffaqiyatli o'chirildi
- *       404:
- *         description: Video topilmadi
  */
-router.delete("/:id", authMiddleware, roleMiddleware("ADMIN"), deleteVideo);
+router.delete(
+    "/:id",
+    authMiddleware,
+    roleMiddleware("ADMIN"),
+    deleteVideo
+);
 
 module.exports = router;
