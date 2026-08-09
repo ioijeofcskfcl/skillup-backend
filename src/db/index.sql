@@ -35,6 +35,11 @@ CREATE TABLE videos (
     duration INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE videos
+ADD COLUMN order_number INT;
+
+ALTER TABLE videos
+ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
 CREATE TABLE payments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

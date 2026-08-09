@@ -23,7 +23,8 @@ const createVideoSchema = Joi.object({
                 "Video nomi kamida 3 ta belgidan iborat bo'lishi kerak.",
             "string.max":
                 "Video nomi 255 ta belgidan oshmasligi kerak.",
-            "any.required": "Video nomi kiritilishi shart.",
+            "any.required":
+                "Video nomi kiritilishi shart.",
         }),
 
     duration: Joi.number()
@@ -31,8 +32,10 @@ const createVideoSchema = Joi.object({
         .positive()
         .required()
         .messages({
-            "number.base": "Video davomiyligi raqam bo'lishi kerak.",
-            "number.integer": "Davomiylik butun son bo'lishi kerak.",
+            "number.base":
+                "Video davomiyligi raqam bo'lishi kerak.",
+            "number.integer":
+                "Davomiylik butun son bo'lishi kerak.",
             "number.positive":
                 "Davomiylik 0 dan katta bo'lishi kerak.",
             "any.required":
@@ -69,48 +72,17 @@ const updateVideoSchema = Joi.object({
         .trim()
         .min(3)
         .max(255)
-        .optional()
-        .messages({
-            "string.empty":
-                "Video nomi bo'sh bo'lishi mumkin emas.",
-            "string.min":
-                "Video nomi kamida 3 ta belgidan iborat bo'lishi kerak.",
-            "string.max":
-                "Video nomi 255 ta belgidan oshmasligi kerak.",
-        }),
-
-    video_url: Joi.string()
-        .uri()
-        .optional()
-        .messages({
-            "string.uri": "Video URL noto'g'ri.",
-        }),
+        .optional(),
 
     duration: Joi.number()
         .integer()
         .positive()
-        .optional()
-        .messages({
-            "number.base":
-                "Video davomiyligi raqam bo'lishi kerak.",
-            "number.integer":
-                "Davomiylik butun son bo'lishi kerak.",
-            "number.positive":
-                "Davomiylik 0 dan katta bo'lishi kerak.",
-        }),
+        .optional(),
 
     order_number: Joi.number()
         .integer()
         .min(1)
-        .optional()
-        .messages({
-            "number.base":
-                "Tartib raqami raqam bo'lishi kerak.",
-            "number.integer":
-                "Tartib raqami butun son bo'lishi kerak.",
-            "number.min":
-                "Tartib raqami 1 dan kichik bo'lishi mumkin emas.",
-        }),
+        .optional(),
 });
 
 module.exports = {

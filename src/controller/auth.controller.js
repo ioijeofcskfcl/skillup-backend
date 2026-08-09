@@ -112,6 +112,7 @@ const register = async (req, res, next) => {
         
         
            try {
+           
     console.log("1. Brevo API email yuborishni boshladi");
 
     const response = await axios.post(

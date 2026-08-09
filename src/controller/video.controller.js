@@ -1,12 +1,7 @@
 const videoService = require("../services/video.service");
-const AppError = require("../utils/utilsAppError");
 
 const createVideo = async (req, res, next) => {
     try {
-        if (!req.file) {
-            throw new AppError("Video yuklanmadi.", 400);
-        }
-
         const video = await videoService.createVideo({
             course_id: req.body.course_id,
             title: req.body.title,
@@ -24,18 +19,20 @@ const createVideo = async (req, res, next) => {
         next(error);
     }
 };
+
 const getAllVideos = async (req, res, next) => {
     try {
-        const page = Number(req.query.page) || 1;
-        const limit = Number(req.query.limit) || 10;
+        const {
+            page = 1,
+            limit = 10,
+            course_id = "",
+            search = "",
+            sort = "order_asc",
+        } = req.query;
 
-        const course_id = req.query.course_id || "";
-        const search = req.query.search || "";
-        const sort = req.query.sort || "order_asc";
-
-        const videos = await videoService.getAllVideos(
-            page,
-            limit,
+        const result = await videoService.getAllVideos(
+            Number(page),
+            Number(limit),
             course_id,
             search,
             sort,
@@ -43,15 +40,18 @@ const getAllVideos = async (req, res, next) => {
 
         return res.status(200).json({
             success: true,
-            ...videos,
+            ...result,
         });
     } catch (error) {
         next(error);
     }
 };
+
 const getVideoById = async (req, res, next) => {
     try {
-        const video = await videoService.getVideoById(req.params.id);
+        const video = await videoService.getVideoById(
+            req.params.id,
+        );
 
         return res.status(200).json({
             success: true,
@@ -61,9 +61,13 @@ const getVideoById = async (req, res, next) => {
         next(error);
     }
 };
+
 const updateVideo = async (req, res, next) => {
     try {
-        const video = await videoService.updateVideo(req.params.id, req.body);
+        const video = await videoService.updateVideo(
+            req.params.id,
+            req.body,
+        );
 
         return res.status(200).json({
             success: true,
@@ -74,6 +78,7 @@ const updateVideo = async (req, res, next) => {
         next(error);
     }
 };
+
 const deleteVideo = async (req, res, next) => {
     try {
         await videoService.deleteVideo(req.params.id);
@@ -86,6 +91,7 @@ const deleteVideo = async (req, res, next) => {
         next(error);
     }
 };
+
 const getVideosByCourse = async (req, res, next) => {
     try {
         const videos = await videoService.getVideosByCourse(
@@ -94,13 +100,13 @@ const getVideosByCourse = async (req, res, next) => {
 
         return res.status(200).json({
             success: true,
-            count: videos.length,
             data: videos,
         });
     } catch (error) {
         next(error);
     }
 };
+
 module.exports = {
     createVideo,
     getAllVideos,
