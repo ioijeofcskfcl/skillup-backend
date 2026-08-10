@@ -23,7 +23,20 @@ const cors = require("cors");
 const loggerMiddleware = require("./middleware/logger.middleware");
 const cookieParser = require("cookie-parser");
 
-
+console.log("authRoutes:", typeof authRoutes);
+console.log("userRoutes:", typeof userRoutes);
+console.log("adminRoutes:", typeof adminRoutes);
+console.log("courseRoutes:", typeof courseRoutes);
+console.log("videoRoutes:", typeof videoRoutes);
+console.log("paymentRoutes:", typeof paymentRoutes);
+console.log("categoryRoutes:", typeof categoryRoutes);
+console.log("dashboardRoutes:", typeof dashboardRoutes);
+console.log("progressRoutes:", typeof progressRoutes);
+console.log("certificateRoutes:", typeof certificateRoutes);
+console.log("postRoutes:", typeof postRoutes);
+console.log("quizRoutes:", typeof quizRoutes);
+console.log("pricingRoutes:", typeof pricingRoutes);
+console.log("mentorRoutes:", typeof mentorRoutes);
 app.use(express.json());
 app.use(cookieParser());
 
@@ -55,6 +68,20 @@ app.use("/api/quizzes", quizRoutes);
 app.use("/api/pricing", pricingRoutes);
 app.use("/api/mentors", mentorRoutes);
 
+console.log("authRoutes:", typeof authRoutes);
+console.log("userRoutes:", typeof userRoutes);
+console.log("adminRoutes:", typeof adminRoutes);
+console.log("courseRoutes:", typeof courseRoutes);
+console.log("videoRoutes:", typeof videoRoutes);
+console.log("paymentRoutes:", typeof paymentRoutes);
+console.log("categoryRoutes:", typeof categoryRoutes);
+console.log("dashboardRoutes:", typeof dashboardRoutes);
+console.log("progressRoutes:", typeof progressRoutes);
+console.log("certificateRoutes:", typeof certificateRoutes);
+console.log("postRoutes:", typeof postRoutes);
+console.log("quizRoutes:", typeof quizRoutes);
+console.log("pricingRoutes:", typeof pricingRoutes);
+console.log("mentorRoutes:", typeof mentorRoutes);
 
 app.use(errorMiddleware);
 
