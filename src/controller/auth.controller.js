@@ -442,13 +442,14 @@ const googleCallback = [
 
             // OTP ni Redisga 5 daqiqaga saqlaymiz
             await redisClient.setex(
-                `google:${email}`,
-                300,
-                JSON.stringify({
-                    email,
-                    code: verificationCode,
-                })
-            );
+    `google:${email}`,
+    300,
+    JSON.stringify({
+        email,
+        code: verificationCode,
+        fullname: user.displayName,
+    })
+);
 
             // Emailga OTP yuboramiz
             const response = await axios.post(
@@ -506,6 +507,8 @@ const googleVerify = async (req, res, next) => {
 
         const googleData = JSON.parse(data);
 
+        console.log("GOOGLE DATA:", googleData);
+
         if (googleData.code !== code) {
             return res.status(400).json({
                 success: false,
@@ -515,8 +518,16 @@ const googleVerify = async (req, res, next) => {
 
         const fullname = googleData.fullname;
 
-        // User bor-yo'qligini tekshiramiz
-        let result = await pool.query(
+        // fullname kelmagan bo'lsa
+        if (!fullname) {
+            return res.status(400).json({
+                success: false,
+                message: "Google foydalanuvchi ismi topilmadi",
+            });
+        }
+
+        // User mavjudligini tekshiramiz
+        const result = await pool.query(
             "SELECT * FROM users WHERE email = $1",
             [email]
         );
@@ -524,9 +535,9 @@ const googleVerify = async (req, res, next) => {
         let user;
 
         if (result.rows.length === 0) {
-            // Yangi Google user yaratamiz
+
             const createUser = await pool.query(
-                `INSERT INTO users 
+                `INSERT INTO users
                 (fullname, email, password, role, is_active)
                 VALUES ($1, $2, NULL, 'USER', true)
                 RETURNING id, fullname, email, role, is_active`,
@@ -534,14 +545,17 @@ const googleVerify = async (req, res, next) => {
             );
 
             user = createUser.rows[0];
+
         } else {
+
             user = result.rows[0];
+
         }
 
-        // OTPni o'chiramiz
+        // Redisdagi OTPni o'chiramiz
         await redisClient.del(`google:${email}`);
 
-        // Token
+        // JWT
         const accessToken = jwt.sign(
             {
                 id: user.id,
