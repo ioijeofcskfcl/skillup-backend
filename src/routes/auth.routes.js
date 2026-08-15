@@ -1,4 +1,5 @@
 const express = require("express");
+const passport = require("../config/passport");
 const router = express.Router();
 const {
     login,
@@ -9,6 +10,9 @@ const {
     resetPassword,
     logout,
     refreshToken,
+    googleLogin,
+    googleCallback,
+    googleVerify
 } = require("../controller/auth.controller");
 const validationMiddleware = require("../middleware/validation.middleware");
 
@@ -230,4 +234,102 @@ router.post("/logout", logout);
  *         description: Refresh token topilmadi yoki yaroqsiz
  */
 router.post("/refresh", refreshToken);
+/**
+ * @swagger
+ * /api/auth/google:
+ *   get:
+ *     summary: Google orqali login
+ *     description: |
+ *       Google orqali autentifikatsiya qilish uchun quyidagi havolani bosing:
+ *
+ *       [🔵 Google Login](https://skillup-backend-production-ce9b.up.railway.app/api/auth/google)
+ *
+ *       Google accountni tanlaganingizdan keyin emailga OTP yuboriladi.
+ *     tags:
+ *       - Autentifikatsiya
+ *     responses:
+ *       302:
+ *         description: Google autentifikatsiya sahifasiga yo'naltiradi
+ */
+router.get("/google", googleLogin);
+/**
+ * @swagger
+ * /api/auth/google/callback:
+ *   get:
+ *     summary: Google autentifikatsiya callback
+ *     tags:
+ *       - Autentifikatsiya
+ *     responses:
+ *       200:
+ *         description: Google orqali login muvaffaqiyatli
+ *       401:
+ *         description: Google autentifikatsiyasi amalga oshmadi
+ */
+router.get(
+    "/google/callback",
+    googleCallback
+);
+/**
+ * @swagger
+ * /api/auth/google/verify:
+ *   post:
+ *     summary: Google orqali yuborilgan OTP kodni tasdiqlash
+ *     tags:
+ *       - Autentifikatsiya
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - code
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "jumanazarovogabek773@gmail.com"
+ *               code:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: Google orqali login muvaffaqiyatli
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Google orqali login muvaffaqiyatli."
+ *                 accessToken:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIs..."
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: "550e8400-e29b-41d4-a716-446655440000"
+ *                     email:
+ *                       type: string
+ *                       example: "jumanazarovogabek773@gmail.com"
+ *                     role:
+ *                       type: string
+ *                       example: "USER"
+ *       400:
+ *         description: Tasdiqlash kodi noto'g'ri
+ *       401:
+ *         description: Kod topilmadi yoki muddati tugagan
+ *       404:
+ *         description: Foydalanuvchi topilmadi
+ */
+router.post("/google/verify", googleVerify);
+
+
 module.exports = router;

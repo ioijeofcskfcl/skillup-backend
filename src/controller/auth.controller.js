@@ -1,10 +1,12 @@
 const pool = require("../db/index");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const passport = require("../config/passport");
 const redisClient = require("../redis/redis");
 const nodemailer = require("nodemailer");
 const axios = require("axios");
 const AppError = require("../utils/utilsAppError");
+
 
 
 const transporter = nodemailer.createTransport({
@@ -406,6 +408,165 @@ const refreshToken = async (req, res, next) => {
     }
 };
 
+// 9. GOOGLE LOGIN
+// 9. GOOGLE LOGIN
+const googleLogin = passport.authenticate("google", {
+    scope: ["profile", "email"],
+});
+
+// 10. GOOGLE CALLBACK
+const googleCallback = [
+    passport.authenticate("google", {
+        session: false,
+    }),
+
+    async (req, res, next) => {
+        try {
+            console.log("Google user:", req.user);
+
+            const user = req.user;
+
+            if (!user) {
+                throw new AppError(
+                    "Google orqali foydalanuvchi topilmadi.",
+                    401
+                );
+            }
+
+            const email = user.email;
+
+            // OTP yaratamiz
+            const verificationCode = Math.floor(
+                100000 + Math.random() * 900000
+            ).toString();
+
+            // OTP ni Redisga 5 daqiqaga saqlaymiz
+            await redisClient.setex(
+                `google:${email}`,
+                300,
+                JSON.stringify({
+                    email,
+                    code: verificationCode,
+                })
+            );
+
+            // Emailga OTP yuboramiz
+            await transporter.sendMail({
+                from: '"Skill Up" <jumanazarovogabek773@gmail.com>',
+                to: email,
+                subject: "Skill Up — Google login tasdiqlash kodi",
+                html: `
+                    <h2>Google orqali kirish</h2>
+                    <p>Sizning tasdiqlash kodingiz:</p>
+                    <h1>${verificationCode}</h1>
+                    <p>Kod 5 daqiqa amal qiladi.</p>
+                `,
+            });
+
+            console.log("Google OTP yuborildi:", email);
+
+            return res.status(200).json({
+                success: true,
+                message: "Google emailga tasdiqlash kodi yuborildi.",
+                email,
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    },
+];
+// 11. GOOGLE OTP VERIFY
+const googleVerify = async (req, res, next) => {
+    const { email, code } = req.body;
+
+    try {
+        const data = await redisClient.get(`google:${email}`);
+
+        if (!data) {
+            throw new AppError(
+                "Tasdiqlash kodi topilmadi yoki muddati tugagan.",
+                401
+            );
+        }
+
+        const parsedData = JSON.parse(data);
+
+        if (parsedData.code !== code) {
+            throw new AppError(
+                "Tasdiqlash kodi noto'g'ri.",
+                400
+            );
+        }
+
+        // Userni database'dan olamiz
+        const userResult = await pool.query(
+            `SELECT id, email, role
+             FROM users
+             WHERE email = $1`,
+            [email]
+        );
+
+        if (userResult.rows.length === 0) {
+            throw new AppError(
+                "Foydalanuvchi topilmadi.",
+                404
+            );
+        }
+
+        const user = userResult.rows[0];
+
+        // OTP ishlatilgandan keyin Redisdan o'chiramiz
+        await redisClient.del(`google:${email}`);
+
+        // ACCESS TOKEN
+        const accessToken = jwt.sign(
+            {
+                id: user.id,
+                role: user.role,
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "15m",
+            }
+        );
+
+        // REFRESH TOKEN
+        const refreshToken = jwt.sign(
+            {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: process.env.JWT_EXPIRES_IN,
+            }
+        );
+
+        // Cookie
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Google orqali login muvaffaqiyatli.",
+            accessToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+            },
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
 module.exports = {
     login,
     register,
@@ -415,4 +576,7 @@ module.exports = {
     resetPassword,
     logout,
     refreshToken,
+    googleLogin,
+    googleCallback,
+    googleVerify,
 };

@@ -38,6 +38,10 @@ const {
  *               name:
  *                 type: string
  *                 example: Dasturlash
+ *               icon:
+ *                 type: string
+ *                 example: code
+ *                 description: Kategoriya ikonkasining nomi
  *     responses:
  *       201:
  *         description: Kategoriya yaratildi
@@ -46,8 +50,8 @@ router.post(
     "/",
     authMiddleware,
     roleMiddleware("ADMIN"),
-    createCategory,
-    validationMiddleware(createCategorySchema)
+    validationMiddleware(createCategorySchema),
+    createCategory
 );
 
 /**
@@ -127,18 +131,21 @@ router.get(
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - name
  *             properties:
  *               name:
  *                 type: string
  *                 example: Backend Development
+ *               icon:
+ *                 type: string
+ *                 example: code
+ *                 description: Kategoriya ikonkasining nomi
  *     responses:
  *       200:
  *         description: Kategoriya muvaffaqiyatli yangilandi
@@ -147,8 +154,8 @@ router.put(
     "/:id",
     authMiddleware,
     roleMiddleware("ADMIN"),
-    updateCategory,
-    validationMiddleware(updateCategorySchema)
+    validationMiddleware(updateCategorySchema),
+    updateCategory
 );
 /**
  * @swagger

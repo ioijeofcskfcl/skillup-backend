@@ -14,6 +14,7 @@ const createCategorySchema = Joi.object({
                 "Kategoriya nomi 100 ta belgidan oshmasligi kerak.",
             "any.required": "Kategoriya nomi kiritilishi shart.",
         }),
+        icon: Joi.string().max(50).optional()
 });
 
 const updateCategorySchema = Joi.object({
@@ -30,6 +31,7 @@ const updateCategorySchema = Joi.object({
                 "Kategoriya nomi 100 ta belgidan oshmasligi kerak.",
             "any.required": "Kategoriya nomi kiritilishi shart.",
         }),
+        icon: Joi.string().max(50).optional()
 });
 
 module.exports = {

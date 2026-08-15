@@ -3,7 +3,7 @@ const pool = require("../db/index");
 const AppError = require("../utils/utilsAppError");
 
 // CREATE
-const createCategory = async ({ name }) => {
+const createCategory = async ({ name,icon }) => {
     const check = await pool.query("SELECT * FROM categories WHERE name = $1", [
         name,
     ]);
@@ -14,11 +14,11 @@ const createCategory = async ({ name }) => {
 
     const result = await pool.query(
         `
-        INSERT INTO categories(name)
-        VALUES($1)
+        INSERT INTO categories(name,icon)
+        VALUES($1,$2)
         RETURNING *
         `,
-        [name],
+        [name,icon],
     );
 
     return result.rows[0];
@@ -122,7 +122,7 @@ const getCategoryById = async (id) => {
 
     return result.rows[0];
 };
-const updateCategory = async (id, { name }) => {
+const updateCategory = async (id, { name,icon }) => {
     const check = await pool.query("SELECT * FROM categories WHERE id = $1", [
         id,
     ]);
@@ -143,11 +143,12 @@ const updateCategory = async (id, { name }) => {
     const result = await pool.query(
         `
         UPDATE categories
-        SET name = $1
-        WHERE id = $2
+        SET name = $1,
+            icon = $2
+        WHERE id = $3
         RETURNING *
         `,
-        [name, id],
+        [name,icon,id],
     );
 
     return result.rows[0];
