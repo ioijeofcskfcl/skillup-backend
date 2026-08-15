@@ -500,7 +500,7 @@ const googleVerify = async (req, res, next) => {
         if (!data) {
             return res.status(400).json({
                 success: false,
-                message: "Kod eskirgan yoki topilmadi",
+                message: "Kod muddati tugagan yoki topilmadi",
             });
         }
 
@@ -513,6 +513,8 @@ const googleVerify = async (req, res, next) => {
             });
         }
 
+        const fullname = googleData.fullname;
+
         // User bor-yo'qligini tekshiramiz
         let result = await pool.query(
             "SELECT * FROM users WHERE email = $1",
@@ -522,28 +524,25 @@ const googleVerify = async (req, res, next) => {
         let user;
 
         if (result.rows.length === 0) {
-            // Google orqali yangi user
-            result = await pool.query(
-                `INSERT INTO users (fullname, email, is_active)
-                 VALUES ($1, $2, $3)
-                 RETURNING *`,
-                [googleData.fullname, email, true]
+            // Yangi Google user yaratamiz
+            const createUser = await pool.query(
+                `INSERT INTO users 
+                (fullname, email, password, role, is_active)
+                VALUES ($1, $2, NULL, 'USER', true)
+                RETURNING id, fullname, email, role, is_active`,
+                [fullname, email]
             );
 
-            user = result.rows[0];
+            user = createUser.rows[0];
         } else {
-            // User oldindan mavjud
             user = result.rows[0];
-
-            await pool.query(
-                "UPDATE users SET is_active = true WHERE email = $1",
-                [email]
-            );
         }
 
+        // OTPni o'chiramiz
         await redisClient.del(`google:${email}`);
 
-        const token = jwt.sign(
+        // Token
+        const accessToken = jwt.sign(
             {
                 id: user.id,
                 email: user.email,
@@ -551,14 +550,14 @@ const googleVerify = async (req, res, next) => {
             },
             process.env.JWT_SECRET,
             {
-                expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+                expiresIn: process.env.JWT_EXPIRES_IN || "15m",
             }
         );
 
         return res.status(200).json({
             success: true,
             message: "Google orqali ro'yxatdan o'tish muvaffaqiyatli",
-            token,
+            accessToken,
             user,
         });
 
