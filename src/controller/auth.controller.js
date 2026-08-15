@@ -451,17 +451,31 @@ const googleCallback = [
             );
 
             // Emailga OTP yuboramiz
-            await transporter.sendMail({
-                from: '"Skill Up" <jumanazarovogabek773@gmail.com>',
-                to: email,
-                subject: "Skill Up — Google login tasdiqlash kodi",
-                html: `
-                    <h2>Google orqali kirish</h2>
-                    <p>Sizning tasdiqlash kodingiz:</p>
-                    <h1>${verificationCode}</h1>
-                    <p>Kod 5 daqiqa amal qiladi.</p>
-                `,
-            });
+            const response = await axios.post(
+        "https://api.brevo.com/v3/smtp/email",
+        {
+            sender: {
+                name: "Skill Up",
+                email: process.env.EMAIL_USER,
+            },
+            to: [
+                {
+                    email: email,
+                },
+            ],
+            subject: "Skill Up — Tasdiqlash kodi",
+            htmlContent: `
+                <h3>Sizning tasdiqlash kodingiz: ${verificationCode}</h3>
+            `,
+        },
+        {
+            headers: {
+                accept: "application/json",
+                "api-key": process.env.BREVO_API_KEY,
+                "content-type": "application/json",
+            },
+        }
+    );
 
             console.log("Google OTP yuborildi:", email);
 
