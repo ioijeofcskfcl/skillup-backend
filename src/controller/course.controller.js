@@ -4,6 +4,7 @@ const createCourse = async (req, res, next) => {
     try {
         const course = await courseService.createCourse({
             ...req.body,
+            image: req.file,
             created_by: req.user.id,
         });
 
@@ -16,6 +17,7 @@ const createCourse = async (req, res, next) => {
         next(error);
     }
 };
+
 const getAllCourses = async (req, res, next) => {
     try {
         const page = Number(req.query.page) || 1;
@@ -29,7 +31,7 @@ const getAllCourses = async (req, res, next) => {
             limit,
             category_id,
             search,
-            sort,
+            sort
         );
 
         return res.status(200).json({
@@ -40,6 +42,7 @@ const getAllCourses = async (req, res, next) => {
         next(error);
     }
 };
+
 const getCourseById = async (req, res, next) => {
     try {
         const course = await courseService.getCourseById(req.params.id);
@@ -52,11 +55,15 @@ const getCourseById = async (req, res, next) => {
         next(error);
     }
 };
+
 const updateCourse = async (req, res, next) => {
     try {
         const course = await courseService.updateCourse(
             req.params.id,
-            req.body,
+            {
+                ...req.body,
+                image: req.file,
+            }
         );
 
         return res.status(200).json({
@@ -68,6 +75,7 @@ const updateCourse = async (req, res, next) => {
         next(error);
     }
 };
+
 const deleteCourse = async (req, res, next) => {
     try {
         await courseService.deleteCourse(req.params.id);
@@ -80,11 +88,12 @@ const deleteCourse = async (req, res, next) => {
         next(error);
     }
 };
+
 const getCourseVideos = async (req, res, next) => {
     try {
         const videos = await courseService.getCourseVideos(
             req.params.id,
-            req.user.id,
+            req.user.id
         );
 
         return res.status(200).json({
@@ -95,11 +104,12 @@ const getCourseVideos = async (req, res, next) => {
         next(error);
     }
 };
+
 module.exports = {
     createCourse,
     getAllCourses,
     getCourseById,
     updateCourse,
     deleteCourse,
-    getCourseVideos
+    getCourseVideos,
 };

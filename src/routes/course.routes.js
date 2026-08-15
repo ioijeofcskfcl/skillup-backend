@@ -10,7 +10,7 @@ const {
     getCourseVideos
 } = require("../controller/course.controller");
 const validationMiddleware = require("../middleware/validation.middleware");
-
+const upload = require("../middleware/upload");
 const {
     createCourseSchema,
     updateCourseSchema,
@@ -31,7 +31,7 @@ const roleMiddleware = require("../middleware/role.middleware");
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -39,6 +39,7 @@ const roleMiddleware = require("../middleware/role.middleware");
  *               - title
  *               - description
  *               - price
+ *               - image
  *             properties:
  *               category_id:
  *                 type: string
@@ -52,9 +53,10 @@ const roleMiddleware = require("../middleware/role.middleware");
  *               price:
  *                 type: number
  *                 example: 500000
- *               image_url:
+ *               image:
  *                 type: string
- *                 example: https://example.com/course.jpg
+ *                 format: binary
+ *                 description: Kurs rasmi
  *     responses:
  *       201:
  *         description: Kurs muvaffaqiyatli yaratildi
@@ -69,8 +71,9 @@ router.post(
     "/",
     authMiddleware,
     roleMiddleware("ADMIN"),
-    createCourse,
-    validationMiddleware(createCourseSchema)
+    upload.single("image"),
+    validationMiddleware(createCourseSchema),
+    createCourse
 );
 /**
  * @swagger
@@ -148,15 +151,18 @@ router.get("/:id", authMiddleware, getCourseById);
  *         required: true
  *         schema:
  *           type: string
+ *           format: uuid
+ *         description: Kurs ID
  *     requestBody:
  *       required: false
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               category_id:
  *                 type: string
+ *                 format: uuid
  *                 example: 7c0b5fd0-5d85-4d8e-b7c7-123456789abc
  *               title:
  *                 type: string
@@ -167,9 +173,10 @@ router.get("/:id", authMiddleware, getCourseById);
  *               price:
  *                 type: number
  *                 example: 500000
- *               image_url:
+ *               image:
  *                 type: string
- *                 example: https://example.com/course.jpg
+ *                 format: binary
+ *                 description: Kursning yangi rasmi
  *     responses:
  *       200:
  *         description: Kurs muvaffaqiyatli yangilandi
@@ -186,8 +193,9 @@ router.put(
     "/:id",
     authMiddleware,
     roleMiddleware("ADMIN"),
-    updateCourse,
-    validationMiddleware(updateCourseSchema)
+    upload.single("image"),
+    validationMiddleware(updateCourseSchema),
+    updateCourse
 );
 
 /**

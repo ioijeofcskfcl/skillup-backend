@@ -1,12 +1,30 @@
 const pool = require("../db/index");
 const AppError = require("../utils/utilsAppError");
 
+const {
+    S3Client,
+    PutObjectCommand,
+} = require("@aws-sdk/client-s3");
+
+const crypto = require("crypto");
+
+const s3 = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+});
+
+// ===============================
+// CREATE COURSE
+// ===============================
 const createCourse = async ({
     category_id,
     title,
     description,
     price,
-    image_url,
+    image,
     created_by,
 }) => {
     const category = await pool.query(
@@ -17,6 +35,24 @@ const createCourse = async ({
     if (category.rows.length === 0) {
         throw new AppError("Kategoriya topilmadi.", 404);
     }
+
+    if (!image) {
+        throw new AppError("Kurs rasmi yuklanishi kerak.", 400);
+    }
+
+    const fileName = `courses/${crypto.randomUUID()}-${image.originalname}`;
+
+    const uploadCommand = new PutObjectCommand({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: fileName,
+        Body: image.buffer,
+        ContentType: image.mimetype,
+    });
+
+    await s3.send(uploadCommand);
+
+    const image_url =
+        `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
 
     const result = await pool.query(
         `
@@ -32,12 +68,22 @@ const createCourse = async ({
         VALUES ($1,$2,$3,$4,$5,$6)
         RETURNING *
         `,
-        [category_id, title, description, price, image_url, created_by],
+        [
+            category_id,
+            title,
+            description,
+            price,
+            image_url,
+            created_by,
+        ],
     );
 
     return result.rows[0];
 };
 
+// ===============================
+// GET ALL COURSES
+// ===============================
 const getAllCourses = async (
     page = 1,
     limit = 10,
@@ -50,13 +96,11 @@ const getAllCourses = async (
     let where = [];
     let values = [];
 
-    // CATEGORY FILTER
     if (category_id) {
         values.push(category_id);
         where.push(`c.category_id = $${values.length}`);
     }
 
-    // SEARCH FILTER
     if (search) {
         values.push(`%${search}%`);
         where.push(
@@ -64,9 +108,11 @@ const getAllCourses = async (
         );
     }
 
-    const whereQuery = where.length ? "WHERE " + where.join(" AND ") : "";
+    const whereQuery =
+        where.length
+            ? "WHERE " + where.join(" AND ")
+            : "";
 
-    // COUNT QUERY
     const totalResult = await pool.query(
         `
         SELECT COUNT(*)
@@ -77,6 +123,7 @@ const getAllCourses = async (
     );
 
     const total = Number(totalResult.rows[0].count);
+
     let orderBy = "c.created_at DESC";
 
     switch (sort) {
@@ -103,7 +150,7 @@ const getAllCourses = async (
         default:
             orderBy = "c.created_at DESC";
     }
-    // MAIN QUERY
+
     const result = await pool.query(
         `
         SELECT
@@ -114,7 +161,7 @@ const getAllCourses = async (
         LEFT JOIN users u
             ON c.created_by = u.id
         ${whereQuery}
-       ORDER BY ${orderBy}
+        ORDER BY ${orderBy}
         LIMIT $${values.length + 1}
         OFFSET $${values.length + 2}
         `,
@@ -130,6 +177,9 @@ const getAllCourses = async (
     };
 };
 
+// ===============================
+// GET COURSE BY ID
+// ===============================
 const getCourseById = async (id) => {
     const result = await pool.query(
         `
@@ -155,10 +205,14 @@ const getCourseById = async (id) => {
     return result.rows[0];
 };
 
+// ===============================
+// UPDATE COURSE
+// ===============================
 const updateCourse = async (id, data) => {
-    const oldCourse = await pool.query("SELECT * FROM courses WHERE id = $1", [
-        id,
-    ]);
+    const oldCourse = await pool.query(
+        "SELECT * FROM courses WHERE id = $1",
+        [id],
+    );
 
     if (oldCourse.rows.length === 0) {
         throw new AppError("Kurs topilmadi.", 404);
@@ -166,6 +220,7 @@ const updateCourse = async (id, data) => {
 
     const course = oldCourse.rows[0];
 
+    // Category tekshirish
     if (data.category_id) {
         const category = await pool.query(
             "SELECT * FROM categories WHERE id = $1",
@@ -177,11 +232,37 @@ const updateCourse = async (id, data) => {
         }
     }
 
-    const category_id = data.category_id ?? course.category_id;
-    const title = data.title ?? course.title;
-    const description = data.description ?? course.description;
-    const price = data.price ?? course.price;
-    const image_url = data.image_url ?? course.image_url;
+    const category_id =
+        data.category_id ?? course.category_id;
+
+    const title =
+        data.title ?? course.title;
+
+    const description =
+        data.description ?? course.description;
+
+    const price =
+        data.price ?? course.price;
+
+    let image_url = course.image_url;
+
+    // Agar yangi rasm yuborilgan bo'lsa
+    if (data.image) {
+        const fileName =
+            `courses/${crypto.randomUUID()}-${data.image.originalname}`;
+
+        const uploadCommand = new PutObjectCommand({
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: fileName,
+            Body: data.image.buffer,
+            ContentType: data.image.mimetype,
+        });
+
+        await s3.send(uploadCommand);
+
+        image_url =
+            `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+    }
 
     const result = await pool.query(
         `
@@ -196,23 +277,41 @@ const updateCourse = async (id, data) => {
         WHERE id = $6
         RETURNING *
         `,
-        [category_id, title, description, price, image_url, id],
+        [
+            category_id,
+            title,
+            description,
+            price,
+            image_url,
+            id,
+        ],
     );
 
     return result.rows[0];
 };
 
+// ===============================
+// DELETE COURSE
+// ===============================
 const deleteCourse = async (id) => {
-    const course = await pool.query("SELECT id FROM courses WHERE id = $1", [
-        id,
-    ]);
+    const course = await pool.query(
+        "SELECT id FROM courses WHERE id = $1",
+        [id],
+    );
 
     if (course.rows.length === 0) {
         throw new AppError("Kurs topilmadi.", 404);
     }
 
-    await pool.query("DELETE FROM courses WHERE id = $1", [id]);
+    await pool.query(
+        "DELETE FROM courses WHERE id = $1",
+        [id],
+    );
 };
+
+// ===============================
+// GET COURSE VIDEOS
+// ===============================
 const getCourseVideos = async (courseId, userId) => {
     const course = await pool.query(
         `
@@ -247,6 +346,7 @@ const getCourseVideos = async (courseId, userId) => {
 
     return result.rows;
 };
+
 module.exports = {
     createCourse,
     getAllCourses,
