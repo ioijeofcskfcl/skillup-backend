@@ -575,6 +575,7 @@ const googleVerify = async (req, res, next) => {
         const accessToken = jwt.sign(
             {
                 id: user.id,
+                username:user.username,
                 email: user.email,
                 role: user.role,
             },
