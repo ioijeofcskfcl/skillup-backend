@@ -492,61 +492,58 @@ const googleCallback = [
 ];
 // 11. GOOGLE OTP VERIFY
 const googleVerify = async (req, res, next) => {
-    const { email, code } = req.body;
-
     try {
+        const { email, code } = req.body;
+
         const data = await redisClient.get(`google:${email}`);
 
         if (!data) {
-            throw new AppError(
-                "Tasdiqlash kodi topilmadi yoki muddati tugagan.",
-                401
-            );
+            return res.status(400).json({
+                success: false,
+                message: "Kod eskirgan yoki topilmadi",
+            });
         }
 
-        const parsedData = JSON.parse(data);
+        const googleData = JSON.parse(data);
 
-        if (parsedData.code !== code) {
-            throw new AppError(
-                "Tasdiqlash kodi noto'g'ri.",
-                400
-            );
+        if (googleData.code !== code) {
+            return res.status(400).json({
+                success: false,
+                message: "Tasdiqlash kodi noto'g'ri",
+            });
         }
 
-        // Userni database'dan olamiz
-        const userResult = await pool.query(
-            `SELECT id, email, role
-             FROM users
-             WHERE email = $1`,
+        // User bor-yo'qligini tekshiramiz
+        let result = await pool.query(
+            "SELECT * FROM users WHERE email = $1",
             [email]
         );
 
-        if (userResult.rows.length === 0) {
-            throw new AppError(
-                "Foydalanuvchi topilmadi.",
-                404
+        let user;
+
+        if (result.rows.length === 0) {
+            // Google orqali yangi user
+            result = await pool.query(
+                `INSERT INTO users (fullname, email, is_active)
+                 VALUES ($1, $2, $3)
+                 RETURNING *`,
+                [googleData.fullname, email, true]
+            );
+
+            user = result.rows[0];
+        } else {
+            // User oldindan mavjud
+            user = result.rows[0];
+
+            await pool.query(
+                "UPDATE users SET is_active = true WHERE email = $1",
+                [email]
             );
         }
 
-        const user = userResult.rows[0];
-
-        // OTP ishlatilgandan keyin Redisdan o'chiramiz
         await redisClient.del(`google:${email}`);
 
-        // ACCESS TOKEN
-        const accessToken = jwt.sign(
-            {
-                id: user.id,
-                role: user.role,
-            },
-            process.env.JWT_SECRET,
-            {
-                expiresIn: "15m",
-            }
-        );
-
-        // REFRESH TOKEN
-        const refreshToken = jwt.sign(
+        const token = jwt.sign(
             {
                 id: user.id,
                 email: user.email,
@@ -554,27 +551,15 @@ const googleVerify = async (req, res, next) => {
             },
             process.env.JWT_SECRET,
             {
-                expiresIn: process.env.JWT_EXPIRES_IN,
+                expiresIn: process.env.JWT_EXPIRES_IN || "1d",
             }
         );
-
-        // Cookie
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: false,
-            sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
 
         return res.status(200).json({
             success: true,
-            message: "Google orqali login muvaffaqiyatli.",
-            accessToken,
-            user: {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-            },
+            message: "Google orqali ro'yxatdan o'tish muvaffaqiyatli",
+            token,
+            user,
         });
 
     } catch (error) {
