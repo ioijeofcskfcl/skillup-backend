@@ -496,6 +496,14 @@ const googleVerify = async (req, res, next) => {
     try {
         const { email, code } = req.body;
 
+        if (!email || !code) {
+            return res.status(400).json({
+                success: false,
+                message: "Email va kod kiritilishi kerak",
+            });
+        }
+
+        // Redisdan Google ma'lumotlarini olamiz
         const data = await redisClient.get(`google:${email}`);
 
         if (!data) {
@@ -509,6 +517,7 @@ const googleVerify = async (req, res, next) => {
 
         console.log("GOOGLE DATA:", googleData);
 
+        // OTPni tekshiramiz
         if (googleData.code !== code) {
             return res.status(400).json({
                 success: false,
@@ -518,7 +527,6 @@ const googleVerify = async (req, res, next) => {
 
         const fullname = googleData.fullname;
 
-        // fullname kelmagan bo'lsa
         if (!fullname) {
             return res.status(400).json({
                 success: false,
@@ -534,28 +542,36 @@ const googleVerify = async (req, res, next) => {
 
         let user;
 
+        // USER MAVJUD EMAS
         if (result.rows.length === 0) {
 
             const createUser = await pool.query(
-                `INSERT INTO users
+                `
+                INSERT INTO users
                 (fullname, email, password, role, is_active)
                 VALUES ($1, $2, NULL, 'USER', true)
-                RETURNING id, fullname, email, role, is_active`,
+                RETURNING id, fullname, email, role, is_active
+                `,
                 [fullname, email]
             );
 
             user = createUser.rows[0];
 
-        } else {
+            console.log("Yangi Google user yaratildi:", user.email);
+
+        } 
+        // USER MAVJUD
+        else {
 
             user = result.rows[0];
 
+            console.log("Mavjud Google user:", user.email);
         }
 
-        // Redisdagi OTPni o'chiramiz
+        // OTPni Redisdan o'chiramiz
         await redisClient.del(`google:${email}`);
 
-        // JWT
+        // Access token
         const accessToken = jwt.sign(
             {
                 id: user.id,
@@ -570,7 +586,11 @@ const googleVerify = async (req, res, next) => {
 
         return res.status(200).json({
             success: true,
-            message: "Google orqali ro'yxatdan o'tish muvaffaqiyatli",
+            message:
+                result.rows.length === 0
+                    ? "Google orqali ro'yxatdan o'tish muvaffaqiyatli"
+                    : "Google orqali login muvaffaqiyatli",
+
             accessToken,
             user,
         });
