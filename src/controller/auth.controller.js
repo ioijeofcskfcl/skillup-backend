@@ -447,7 +447,7 @@ const googleCallback = [
     JSON.stringify({
         email,
         code: verificationCode,
-        fullname: user.displayName,
+        fullname: user.fullname || user.displayName,
     })
 );
 
