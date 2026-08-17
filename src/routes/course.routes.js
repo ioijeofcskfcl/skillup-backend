@@ -10,7 +10,8 @@ const {
     getCourseVideos
 } = require("../controller/course.controller");
 const validationMiddleware = require("../middleware/validation.middleware");
-const upload = require("../middleware/upload");
+const imageUpload = require("../middleware/imageUpload");
+
 const {
     createCourseSchema,
     updateCourseSchema,
@@ -43,6 +44,7 @@ const roleMiddleware = require("../middleware/role.middleware");
  *             properties:
  *               category_id:
  *                 type: string
+ *                 format: uuid
  *                 example: 7c0b5fd0-5d85-4d8e-b7c7-123456789abc
  *               title:
  *                 type: string
@@ -61,7 +63,7 @@ const roleMiddleware = require("../middleware/role.middleware");
  *       201:
  *         description: Kurs muvaffaqiyatli yaratildi
  *       400:
- *         description: Noto'g'ri ma'lumot yuborildi
+ *         description: Noto'g'ri ma'lumot yoki rasm yuklanmagan
  *       401:
  *         description: Token mavjud emas yoki noto'g'ri
  *       403:
@@ -71,7 +73,7 @@ router.post(
     "/",
     authMiddleware,
     roleMiddleware("ADMIN"),
-    upload.single("image"),
+    imageUpload.single("image"),
     validationMiddleware(createCourseSchema),
     createCourse
 );
@@ -176,12 +178,12 @@ router.get("/:id", authMiddleware, getCourseById);
  *               image:
  *                 type: string
  *                 format: binary
- *                 description: Kursning yangi rasmi
+ *                 description: Yangi kurs rasmi
  *     responses:
  *       200:
  *         description: Kurs muvaffaqiyatli yangilandi
  *       400:
- *         description: Noto'g'ri ma'lumot yuborildi
+ *         description: Noto'g'ri ma'lumot
  *       401:
  *         description: Token mavjud emas yoki noto'g'ri
  *       403:
@@ -193,7 +195,7 @@ router.put(
     "/:id",
     authMiddleware,
     roleMiddleware("ADMIN"),
-    upload.single("image"),
+    imageUpload.single("image"),
     validationMiddleware(updateCourseSchema),
     updateCourse
 );

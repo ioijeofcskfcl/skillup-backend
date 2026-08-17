@@ -36,9 +36,7 @@ const createCourse = async ({
         throw new AppError("Kategoriya topilmadi.", 404);
     }
 
-    if (!image) {
-        throw new AppError("Kurs rasmi yuklanishi kerak.", 400);
-    }
+    
 
     const fileName = `courses/${crypto.randomUUID()}-${image.originalname}`;
 
@@ -344,7 +342,7 @@ const getCourseVideos = async (courseId, userId) => {
         [courseId, userId],
     );
 
-    return result.rows;
+    return result.rows;d
 };
 
 module.exports = {

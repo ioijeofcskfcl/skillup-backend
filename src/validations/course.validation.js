@@ -45,15 +45,6 @@ const createCourseSchema = Joi.object({
             "number.positive": "Narx 0 dan katta bo'lishi kerak.",
             "any.required": "Narx kiritilishi shart.",
         }),
-
-    image_url: Joi.string()
-        .uri()
-        .required()
-        .messages({
-            "string.empty": "Rasm URL manzili kiritilishi shart.",
-            "string.uri": "Rasm URL manzili noto'g'ri.",
-            "any.required": "Rasm URL manzili kiritilishi shart.",
-        }),
 });
 
 const updateCourseSchema = Joi.object({
@@ -95,13 +86,6 @@ const updateCourseSchema = Joi.object({
         .messages({
             "number.base": "Narx raqam bo'lishi kerak.",
             "number.positive": "Narx 0 dan katta bo'lishi kerak.",
-        }),
-
-    image_url: Joi.string()
-        .uri()
-        .optional()
-        .messages({
-            "string.uri": "Rasm URL manzili noto'g'ri.",
         }),
 });
 
