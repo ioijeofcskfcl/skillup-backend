@@ -16,9 +16,7 @@ const s3 = new S3Client({
     },
 });
 
-// ===============================
-// CREATE COURSE
-// ===============================
+
 const createCourse = async ({
     category_id,
     title,
@@ -79,9 +77,7 @@ const createCourse = async ({
     return result.rows[0];
 };
 
-// ===============================
-// GET ALL COURSES
-// ===============================
+
 const getAllCourses = async (
     page = 1,
     limit = 10,
@@ -175,9 +171,7 @@ const getAllCourses = async (
     };
 };
 
-// ===============================
-// GET COURSE BY ID
-// ===============================
+
 const getCourseById = async (id) => {
     const result = await pool.query(
         `
@@ -203,9 +197,7 @@ const getCourseById = async (id) => {
     return result.rows[0];
 };
 
-// ===============================
-// UPDATE COURSE
-// ===============================
+
 const updateCourse = async (id, data) => {
     const oldCourse = await pool.query(
         "SELECT * FROM courses WHERE id = $1",
@@ -288,9 +280,7 @@ const updateCourse = async (id, data) => {
     return result.rows[0];
 };
 
-// ===============================
-// DELETE COURSE
-// ===============================
+
 const deleteCourse = async (id) => {
     const course = await pool.query(
         "SELECT id FROM courses WHERE id = $1",
@@ -307,9 +297,7 @@ const deleteCourse = async (id) => {
     );
 };
 
-// ===============================
-// GET COURSE VIDEOS
-// ===============================
+
 const getCourseVideos = async (courseId, userId) => {
     const course = await pool.query(
         `

@@ -38,11 +38,11 @@ const createCourseSchema = Joi.object({
         }),
 
     price: Joi.number()
-        .positive()
+        .min(0)
         .required()
         .messages({
             "number.base": "Narx raqam bo'lishi kerak.",
-            "number.positive": "Narx 0 dan katta bo'lishi kerak.",
+            "number.min": "Narx 0 dan kichik bo'lishi mumkin emas.",
             "any.required": "Narx kiritilishi shart.",
         }),
 });
@@ -81,11 +81,11 @@ const updateCourseSchema = Joi.object({
         }),
 
     price: Joi.number()
-        .positive()
+        .min(0)
         .optional()
         .messages({
             "number.base": "Narx raqam bo'lishi kerak.",
-            "number.positive": "Narx 0 dan katta bo'lishi kerak.",
+           "number.min": "Narx 0 dan kichik bo'lishi mumkin emas.",
         }),
 });
 
